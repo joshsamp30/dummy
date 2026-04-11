@@ -634,6 +634,231 @@ h1, h2, h3, h4 {
 
 /* ---------- Products ---------- */
 .products { background: #060606; }
+
+/* ============================================================
+   PRODUCTS (LIGHT) — carousel section with rotating warranty badge
+   ============================================================ */
+.products-light {
+  position: relative;
+  background: #f7f7f5;
+  color: #0a0a0a;
+  padding: 6rem 0 7rem;
+  overflow: hidden;
+}
+
+/* Rotating warranty badge, pinned top-right */
+.warranty-badge {
+  position: absolute;
+  top: 2.5rem;
+  right: 3rem;
+  width: 150px;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff5aa0;
+  text-decoration: none;
+  z-index: 3;
+}
+.warranty-badge svg {
+  width: 100%;
+  height: 100%;
+  animation: badgeSpin 18s linear infinite;
+}
+.badge-text {
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  fill: #ff5aa0;
+  text-transform: uppercase;
+}
+.badge-star {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.6rem;
+  color: #ff5aa0;
+}
+@keyframes badgeSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Headline row with prev/next controls */
+.products-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 3.5rem;
+  padding-top: 2rem;
+}
+.products-head h2 {
+  font-family: "Inter", "Poppins", sans-serif;
+  font-weight: 600;
+  font-size: clamp(2rem, 4.5vw, 3.6rem);
+  line-height: 1.1;
+  letter-spacing: -.02em;
+  color: #0a0a0a;
+  max-width: 16ch;
+  margin: 0;
+}
+.carousel-controls {
+  display: flex;
+  gap: .75rem;
+  flex-shrink: 0;
+}
+.car-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1.5px solid #0a0a0a;
+  background: transparent;
+  color: #0a0a0a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .2s ease, color .2s ease, transform .2s ease;
+}
+.car-btn:hover {
+  background: #0a0a0a;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* Horizontal scrolling carousel */
+.carousel-wrap {
+  position: relative;
+  padding-left: max(2rem, calc((100vw - 1280px) / 2 + 2rem));
+  padding-right: 0;
+}
+.carousel {
+  display: flex;
+  gap: 1.25rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  padding: .5rem 2rem 1.5rem 0;
+  margin: 0;
+  list-style: none;
+  scrollbar-width: none;
+}
+.carousel::-webkit-scrollbar { display: none; }
+.pcard {
+  flex: 0 0 calc((100% - 3 * 1.25rem) / 4);
+  min-width: 260px;
+  scroll-snap-align: start;
+}
+.pcard-img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 4px;
+  background-size: cover;
+  background-position: center;
+  transition: transform .4s cubic-bezier(.2,.8,.2,1);
+  box-shadow: 0 12px 40px -20px rgba(0,0,0,.2);
+}
+.pcard:hover .pcard-img { transform: scale(1.02); }
+.pcard h3 {
+  margin: 1rem 0 0;
+  font-family: "Inter", sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0a0a0a;
+  letter-spacing: -.01em;
+}
+.pcard h3 sup { font-size: .6em; top: -.7em; }
+
+/* Placeholder gradients — swap for real product photos */
+.pcard-1 {
+  background:
+    radial-gradient(circle at 30% 40%, #ffe33a 0%, transparent 40%),
+    radial-gradient(circle at 70% 60%, #3aaaff 0%, transparent 45%),
+    radial-gradient(circle at 50% 80%, #ff3a6b 0%, transparent 40%),
+    linear-gradient(135deg, #1a1a1a, #333);
+}
+.pcard-2 {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,80,200,.5), transparent 55%),
+    linear-gradient(135deg, #2a1030, #120016);
+  position: relative;
+}
+.pcard-3 {
+  background:
+    radial-gradient(circle at 50% 60%, #ffd23a 0%, #ffa500 50%, transparent 80%),
+    linear-gradient(135deg, #222, #111);
+}
+.pcard-4 {
+  background:
+    radial-gradient(ellipse at 50% 70%, #f4efe3 0%, transparent 55%),
+    linear-gradient(135deg, #0a0a0a, #1c1c1c);
+}
+.pcard-5 {
+  background:
+    radial-gradient(circle at 40% 50%, #62d0ff 0%, transparent 45%),
+    linear-gradient(135deg, #0a1a2b, #0a0a10);
+}
+.pcard-6 {
+  background:
+    radial-gradient(circle at 50% 50%, #9bff4a 0%, transparent 50%),
+    linear-gradient(135deg, #0a1a0a, #050505);
+}
+.pcard-7 {
+  background:
+    radial-gradient(circle at 50% 55%, #fff 0%, transparent 35%),
+    radial-gradient(circle at 50% 55%, #ffb347 20%, transparent 55%),
+    linear-gradient(135deg, #1a1a1a, #000);
+}
+.pcard-8 {
+  background:
+    repeating-linear-gradient(90deg, #ffe070 0 14px, #1a1308 14px 28px),
+    #1a1308;
+}
+
+/* Entrance: cards fade-up when section scrolls into view (staggered).
+   Uses a simple animation that runs on load — modern view-timeline
+   would be ideal but isn't universally supported yet. */
+@keyframes cardRise {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.pcard { opacity: 0; animation: cardRise .8s ease-out forwards; }
+.pcard:nth-child(1) { animation-delay: .05s; }
+.pcard:nth-child(2) { animation-delay: .15s; }
+.pcard:nth-child(3) { animation-delay: .25s; }
+.pcard:nth-child(4) { animation-delay: .35s; }
+.pcard:nth-child(5) { animation-delay: .45s; }
+.pcard:nth-child(6) { animation-delay: .55s; }
+.pcard:nth-child(7) { animation-delay: .65s; }
+.pcard:nth-child(8) { animation-delay: .75s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .warranty-badge svg { animation: none; }
+  .pcard { animation: none; opacity: 1; }
+}
+
+@media (max-width: 1024px) {
+  .warranty-badge { width: 120px; height: 120px; top: 1.5rem; right: 1.5rem; }
+  .badge-text { font-size: 11px; }
+  .pcard { flex: 0 0 calc((100% - 2 * 1.25rem) / 3); }
+  .carousel-wrap { padding-left: 1.5rem; }
+}
+@media (max-width: 720px) {
+  .products-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+  .warranty-badge { width: 90px; height: 90px; top: 1rem; right: 1rem; }
+  .badge-star { font-size: 1.8rem; }
+  .badge-text { font-size: 10px; }
+  .pcard { flex: 0 0 75%; min-width: 240px; }
+  .carousel-wrap { padding-left: 1rem; }
+  .products-light { padding: 4.5rem 0 5rem; }
+}
 .grid { display: grid; gap: 1.25rem; }
 .cards { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
 .card {

@@ -98,46 +98,74 @@
       </div>
     </section>
 
-    <!-- =================== PRODUCTS =================== -->
-    <section id="products" class="section products">
+    <!-- =================== PRODUCTS CAROUSEL =================== -->
+    <section id="products" class="section products-light">
+      <!-- Rotating warranty badge -->
+      <a href="#" class="warranty-badge" aria-label="5 year warranty on selected Neonplus products">
+        <svg viewBox="0 0 200 200" aria-hidden="true">
+          <defs>
+            <path id="badge-circle" d="M 100, 100 m -78, 0 a 78,78 0 1,1 156,0 a 78,78 0 1,1 -156,0" />
+          </defs>
+          <text class="badge-text">
+            <textPath href="#badge-circle" startOffset="0">
+              5 YEAR WARRANTY &bull; ON SELECTED NEONPLUS &bull; 5 YEAR WARRANTY &bull; ON SELECTED NEONPLUS &bull;
+            </textPath>
+          </text>
+        </svg>
+        <span class="badge-star" aria-hidden="true">&#10038;</span>
+      </a>
+
       <div class="container">
-        <header class="section-head">
-          <p class="eyebrow">Products</p>
-          <h2>Signage &amp; lighting, manufactured in-house.</h2>
-          <p class="muted">A full range of signage and lighting products for the trade &mdash; designed, built and shipped from our UK workshop.</p>
+        <header class="products-head">
+          <div>
+            <h2>What do you need<br/>for your next project?</h2>
+          </div>
+          <div class="carousel-controls" aria-label="Carousel controls">
+            <button class="car-btn car-prev" aria-label="Previous">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <button class="car-btn car-next" aria-label="Next">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
         </header>
-        <div class="grid cards">
-          <article class="card">
-            <div class="card-glow glow-pink"></div>
-            <h3>Built-up Letters</h3>
-            <p>Fabricated aluminium and acrylic letters with a range of illumination options.</p>
-          </article>
-          <article class="card">
-            <div class="card-glow glow-blue"></div>
-            <h3>Neon &amp; LED Neon</h3>
-            <p>Traditional glass neon and flexible LED neon for signs, interiors and events.</p>
-          </article>
-          <article class="card">
-            <div class="card-glow glow-amber"></div>
-            <h3>Light Boxes</h3>
-            <p>Slim, deep and flex-face light boxes in bespoke sizes with even edge-to-edge lighting.</p>
-          </article>
-          <article class="card">
-            <div class="card-glow glow-green"></div>
-            <h3>Halo Lit</h3>
-            <p>Elegant halo-lit letters and logos for reception walls and shopfronts.</p>
-          </article>
-          <article class="card">
-            <div class="card-glow glow-red"></div>
-            <h3>LED Modules</h3>
-            <p>Our own LED modules engineered for long life, even spread and easy installation.</p>
-          </article>
-          <article class="card">
-            <div class="card-glow glow-violet"></div>
-            <h3>Components</h3>
-            <p>Trims, returns, power supplies and accessories &mdash; trade pricing, fast despatch.</p>
-          </article>
-        </div>
+      </div>
+
+      <div class="carousel-wrap">
+        <ul class="carousel" id="productCarousel">
+          <li class="pcard">
+            <div class="pcard-img pcard-1"></div>
+            <h3>Neonplus<sup>&reg;</sup></h3>
+          </li>
+          <li class="pcard">
+            <div class="pcard-img pcard-2"></div>
+            <h3>Neon flex signs</h3>
+          </li>
+          <li class="pcard">
+            <div class="pcard-img pcard-3"></div>
+            <h3>Flat cut lettering &amp; shapes</h3>
+          </li>
+          <li class="pcard">
+            <div class="pcard-img pcard-4"></div>
+            <h3>Built Ups</h3>
+          </li>
+          <li class="pcard">
+            <div class="pcard-img pcard-5"></div>
+            <h3>Illuminated signs</h3>
+          </li>
+          <li class="pcard">
+            <div class="pcard-img pcard-6"></div>
+            <h3>Light boxes</h3>
+          </li>
+          <li class="pcard">
+            <div class="pcard-img pcard-7"></div>
+            <h3>Halo lit letters</h3>
+          </li>
+          <li class="pcard">
+            <div class="pcard-img pcard-8"></div>
+            <h3>LED modules</h3>
+          </li>
+        </ul>
       </div>
     </section>
 
@@ -309,6 +337,19 @@
       const open = nav.classList.toggle('open');
       toggle.setAttribute('aria-expanded', open);
     });
+
+    // Product carousel arrows
+    const carousel = document.getElementById('productCarousel');
+    const prevBtn  = document.querySelector('.car-prev');
+    const nextBtn  = document.querySelector('.car-next');
+    const scrollByCard = (dir) => {
+      if (!carousel) return;
+      const card = carousel.querySelector('.pcard');
+      const step = card ? card.offsetWidth + 24 : 320;
+      carousel.scrollBy({ left: dir * step, behavior: 'smooth' });
+    };
+    prevBtn && prevBtn.addEventListener('click', () => scrollByCard(-1));
+    nextBtn && nextBtn.addEventListener('click', () => scrollByCard(1));
   </script>
 </body>
 </html>
