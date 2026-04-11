@@ -53,45 +53,55 @@
   <main>
     <!-- =================== HERO =================== -->
     <section class="hero">
-      <h1 class="hero-headline" aria-label="Signage and lighting for the trade">
-        <span class="line line-1">
-          <span class="pill pill-starman" aria-hidden="true"></span>
-          <span class="word">SIGNAGE</span>
-          <span class="pill pill-asterisk" aria-hidden="true"></span>
-          <span class="pill pill-bubble" aria-hidden="true"></span>
-          <span class="pill pill-hello" aria-hidden="true"></span>
-        </span>
+      <div class="hero-grid">
+        <div class="hero-counter" aria-hidden="true">
+          <span class="hero-counter-num">01</span>
+          <span class="hero-counter-sep">/</span>
+          <span class="hero-counter-total">07</span>
+          <span class="hero-counter-label">The Intro</span>
+        </div>
 
-        <span class="line line-2">
-          <span class="pill pill-neon-red" aria-hidden="true"></span>
-          <span class="word">AND LIGHTING</span>
-          <span class="pill pill-dots" aria-hidden="true"></span>
-          <span class="pill pill-squiggle" aria-hidden="true"></span>
-        </span>
+        <h1 class="hero-headline" aria-label="Signage and lighting for the trade">
+          <span class="line line-1">
+            <span class="pill pill-starman" aria-hidden="true"></span>
+            <span class="word" data-word="SIGNAGE">SIGNAGE</span>
+            <span class="pill pill-asterisk" aria-hidden="true"></span>
+            <span class="pill pill-bubble" aria-hidden="true"></span>
+            <span class="pill pill-hello" aria-hidden="true"></span>
+          </span>
 
-        <span class="line line-3">
-          <span class="pill pill-bolt" aria-hidden="true"></span>
-          <span class="word">FOR THE</span>
-          <span class="pill pill-letter-a" aria-hidden="true"></span>
-          <span class="word">TRADE</span>
-          <span class="pill pill-wings" aria-hidden="true"></span>
-        </span>
-      </h1>
+          <span class="line line-2">
+            <span class="pill pill-neon-red" aria-hidden="true"></span>
+            <span class="word" data-word="AND LIGHTING">AND LIGHTING</span>
+            <span class="pill pill-dots" aria-hidden="true"></span>
+            <span class="pill pill-squiggle" aria-hidden="true"></span>
+          </span>
 
-      <p class="hero-tagline">
-        Founded over 20 years ago, we are expert signage and lighting
-        manufacturers, well respected within the sign &amp; display industries.
-      </p>
+          <span class="line line-3">
+            <span class="pill pill-bolt" aria-hidden="true"></span>
+            <span class="word" data-word="FOR THE">FOR THE</span>
+            <span class="pill pill-letter-a" aria-hidden="true"></span>
+            <span class="word word-accent" data-word="TRADE">TRADE</span>
+            <span class="pill pill-wings" aria-hidden="true"></span>
+          </span>
+        </h1>
+
+        <div class="hero-side">
+          <p class="hero-tagline">
+            Founded over 20 years ago, we are expert signage and lighting
+            manufacturers, well respected within the sign &amp; display industries.
+          </p>
+          <div class="hero-ctas">
+            <a href="#contact" class="btn btn-primary btn-magnet">Start a project</a>
+            <a href="#products" class="hero-link">See our work <em>&#8594;</em></a>
+          </div>
+        </div>
+      </div>
 
       <div class="floating-mark" aria-hidden="true">
         <span class="mark-ring"></span>
         <span class="mark-dot"></span>
       </div>
-
-      <a class="scroll-hint" href="#products" aria-label="Scroll to products">
-        <span>Scroll</span>
-        <span class="scroll-hint-line"></span>
-      </a>
 
       <button class="chat-bubble" aria-label="Open chat">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -119,7 +129,8 @@
     </section>
 
     <!-- =================== TRUST STRIP =================== -->
-    <section class="trust-strip">
+    <section class="trust-strip" data-accent="green">
+      <div class="section-counter" aria-hidden="true"><span>02</span><em>/ 07</em><small>The Proof</small></div>
       <div class="container">
         <div class="trust-head reveal">
           <p class="eyebrow-line"><span></span> Trusted by the trade since 2001</p>
@@ -164,7 +175,8 @@
     </div>
 
     <!-- =================== PRODUCTS CAROUSEL =================== -->
-    <section id="products" class="section products-light light-bg">
+    <section id="products" class="section products-light light-bg" data-accent="none">
+      <div class="section-counter dark" aria-hidden="true"><span>03</span><em>/ 07</em><small>The Products</small></div>
       <!-- Rotating warranty badge -->
       <a href="#" class="warranty-badge" aria-label="5 year warranty on selected Neonplus products">
         <svg viewBox="0 0 200 200" aria-hidden="true">
@@ -183,7 +195,7 @@
       <div class="container">
         <header class="products-head reveal">
           <div>
-            <h2>What do you need<br/>for your next project?</h2>
+            <h2 class="split-text">What do you need for your next project?</h2>
           </div>
           <div class="carousel-controls" aria-label="Carousel controls">
             <button class="car-btn car-prev" aria-label="Previous">
@@ -264,10 +276,11 @@
     </div>
 
     <!-- =================== SECTION: NEEDS COVERED =================== -->
-    <section id="company" class="section signage-covered">
+    <section id="company" class="section signage-covered" data-accent="blue">
+      <div class="section-counter" aria-hidden="true"><span>04</span><em>/ 07</em><small>The Range</small></div>
       <div class="container sc-grid">
         <div class="sc-copy reveal">
-          <h2>All your signage<br/>needs covered</h2>
+          <h2 class="split-text">All your signage needs covered</h2>
           <p>Using sophisticated equipment and manufacturing techniques, we are able to create brand-accurate and innovative signs that capture the eye and the imagination.</p>
           <a href="#about" class="btn btn-outline-green">About us</a>
         </div>
@@ -292,11 +305,12 @@
     </div>
 
     <!-- =================== SECTION: DELIVERING =================== -->
-    <section class="section delivering light-bg">
+    <section class="section delivering light-bg" data-accent="amber">
+      <div class="section-counter dark" aria-hidden="true"><span>05</span><em>/ 07</em><small>The Promise</small></div>
       <div class="deliver-grid">
         <div class="deliver-image deliver-left reveal" aria-hidden="true"></div>
         <div class="deliver-copy reveal">
-          <h2>Delivering for<br/>the trade time<br/>and time again</h2>
+          <h2 class="split-text">Delivering for the trade time and time again</h2>
           <p>We work closely with our customers to make sure we offer the best solution for them and their clients needs.</p>
           <p>Our friendly and professional way of working is often described as &lsquo;refreshing&rsquo; by our customers, click below to see why.</p>
           <a href="#" class="btn btn-outline-dark">See how we work</a>
@@ -314,17 +328,18 @@
     </div>
 
     <!-- =================== SECTION: MAGIC =================== -->
-    <section id="magic" class="section magic">
+    <section id="magic" class="section magic" data-accent="pink">
+      <div class="section-counter" aria-hidden="true"><span>06</span><em>/ 07</em><small>The Workshop</small></div>
       <div class="container magic-grid">
         <div class="magic-copy reveal">
-          <h2>
-            Where the<br/>magic happens
-            <span class="magic-bolt" aria-hidden="true">
-              <span class="spark s1">&#10022;</span>
-              <span class="bolt">&#9889;</span>
-              <span class="spark s2">&#10022;</span>
-            </span>
+          <h2 class="split-text">
+            Where the magic happens
           </h2>
+          <span class="magic-bolt" aria-hidden="true">
+            <span class="spark s1">&#10022;</span>
+            <span class="bolt">&#9889;</span>
+            <span class="spark s2">&#10022;</span>
+          </span>
           <p>Our workshop is a hive of activity where we embrace challenges and help bring your ideas to life.</p>
           <a href="#" class="btn btn-outline-green">Explore the workshop</a>
         </div>
@@ -339,14 +354,15 @@
     </section>
 
     <!-- =================== SECTION: BROCHURE =================== -->
-    <section id="contact" class="section brochure">
+    <section id="contact" class="section brochure" data-accent="green">
+      <div class="section-counter" aria-hidden="true"><span>07</span><em>/ 07</em><small>The Next Step</small></div>
       <div class="container">
         <div class="brochure-card reveal">
           <div class="brochure-book" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
           </div>
           <div class="brochure-left">
-            <h2>Download our<br/>brochure</h2>
+            <h2 class="split-text">Download our brochure</h2>
             <p>Fill in the form to access our brochure</p>
             <div class="dot-logo" aria-hidden="true"></div>
           </div>

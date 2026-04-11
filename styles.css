@@ -355,12 +355,61 @@ h1, h2, h3, h4 {
   height: 100vh;
   min-height: 640px;
   max-height: none;
-  padding: 7rem 2.5rem 7rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  padding: 7rem clamp(1.25rem, 4vw, 3.5rem) 5rem;
+  display: block;
   overflow: hidden;
+}
+.hero-grid {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto 1fr auto;
+  height: 100%;
+  max-width: var(--container-wide);
+  margin: 0 auto;
+  gap: 2rem;
+}
+/* Counter pinned top-right of the hero */
+.hero-counter {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: start;
+  justify-self: end;
+  display: inline-flex;
+  align-items: baseline;
+  gap: .35rem;
+  font-family: var(--ff-display);
+  color: var(--ink-3);
+  line-height: 1;
+  padding-top: .5rem;
+}
+.hero-counter-num {
+  font-size: clamp(2rem, 3.2vw, 3.2rem);
+  color: var(--ink);
+}
+.hero-counter-sep { color: var(--ink-3); font-size: 1.5rem; }
+.hero-counter-total { font-size: 1.2rem; color: var(--ink-3); }
+.hero-counter-label {
+  margin-left: .9rem;
+  font-family: var(--ff-body);
+  font-size: .7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .18em;
+  color: var(--muted);
+  align-self: center;
+  position: relative;
+  padding-left: 1.2rem;
+}
+.hero-counter-label::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 16px;
+  height: 1px;
+  background: var(--muted);
 }
 /* Everything after the hero needs to sit above it in stacking order
    AND have a solid background so it actually covers the hero as it
@@ -437,28 +486,30 @@ h1, h2, h3, h4 {
 @media (max-width: 1024px) { .scroll-hint { display: none; } }
 
 .hero-headline {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  align-self: center;
   position: relative;
-  margin: 0 auto;
+  margin: 0;
   padding: 0;
   font-family: var(--ff-display);
-  font-weight: 900;
-  /* Sized so all three lines fit comfortably in 100vh on desktop */
-  font-size: clamp(2rem, 6.2vw, 6.25rem);
-  line-height: .92;
-  letter-spacing: -.015em;
+  font-weight: 400;                  /* Anton is single weight */
+  /* Bigger than before, Anton is narrower so we can afford more */
+  font-size: clamp(2.4rem, 7.8vw, 8rem);
+  line-height: .88;
+  letter-spacing: -.025em;
   color: #fff;
-  text-align: center;
+  text-align: left;
   width: 100%;
-  max-width: 1500px;
   display: flex;
   flex-direction: column;
-  gap: .18em;
+  gap: .08em;
 }
 .hero-headline .line {
   display: flex;
-  flex-wrap: nowrap;               /* never break a line */
+  flex-wrap: nowrap;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: clamp(.35rem, .9vw, .9rem);
   min-width: 0;
 }
@@ -466,6 +517,71 @@ h1, h2, h3, h4 {
   display: inline-block;
   white-space: nowrap;
   flex-shrink: 0;
+}
+/* The punchline: gradient fill on "TRADE" */
+.hero-headline .word-accent {
+  background: linear-gradient(135deg, var(--green) 0%, #fff 40%, var(--pink) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  position: relative;
+}
+
+/* Hero right-column: tagline + CTAs, bottom-right */
+.hero-side {
+  grid-column: 2;
+  grid-row: 3;
+  justify-self: end;
+  align-self: end;
+  max-width: 340px;
+  text-align: right;
+  padding-bottom: 1rem;
+}
+.hero-side .hero-tagline {
+  font-size: .92rem;
+  line-height: 1.55;
+  color: var(--ink-3);
+  margin: 0 0 1.5rem;
+  position: static;
+  right: auto;
+  bottom: auto;
+  max-width: none;
+  padding-left: 1.25rem;
+  border-left: 1px solid rgba(255,255,255,.15);
+}
+.hero-ctas {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.hero-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  color: var(--ink);
+  font-size: .92rem;
+  font-weight: 500;
+  padding: .5rem 0;
+  border-bottom: 1px solid rgba(255,255,255,.2);
+  transition: color var(--t-fast) var(--ease-out), border-color var(--t-fast) var(--ease-out);
+}
+.hero-link em { font-style: normal; transition: transform var(--t-fast) var(--ease-out); }
+.hero-link:hover { color: var(--green); border-color: var(--green); }
+.hero-link:hover em { transform: translateX(3px); }
+
+/* Kill the scroll hint */
+.scroll-hint { display: none !important; }
+
+@media (max-width: 860px) {
+  .hero { padding: 6rem 1.25rem 4rem; }
+  .hero-grid { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
+  .hero-counter { grid-column: 1; justify-self: start; }
+  .hero-side { grid-column: 1; justify-self: start; align-self: end; text-align: left; }
+  .hero-side .hero-tagline { border-left: none; padding-left: 0; }
+  .hero-ctas { justify-content: flex-start; }
+  .hero-headline { text-align: left; font-size: clamp(2.2rem, 12vw, 5rem); }
 }
 
 /* Inline image "pills" — coloured placeholders you can swap for real photos.
@@ -611,17 +727,7 @@ h1, h2, h3, h4 {
 }
 
 /* Hero tagline (bottom-right) */
-.hero-tagline {
-  position: absolute;
-  right: 2.5rem;
-  bottom: 2.25rem;
-  max-width: 320px;
-  color: #c9c9d0;
-  font-size: .85rem;
-  line-height: 1.5;
-  text-align: right;
-  margin: 0;
-}
+/* .hero-tagline — positioning now handled by .hero-side grid cell */
 
 /* ============================================================
    HERO ANIMATIONS
@@ -1090,6 +1196,65 @@ h1, h2, h3, h4 {
 .site-header.scrolled .main-nav ul {
   box-shadow: 0 10px 30px -10px rgba(0,0,0,.5);
 }
+
+/* ============================================================
+   SECTION COUNTER — muted index badge at top-right of each section
+   ============================================================ */
+.section-counter {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  z-index: 3;
+  display: inline-flex;
+  align-items: baseline;
+  gap: .35rem;
+  font-family: var(--ff-display);
+  color: var(--ink-3);
+  line-height: 1;
+  pointer-events: none;
+  opacity: .9;
+}
+.section-counter span {
+  font-size: clamp(1.7rem, 2.4vw, 2.2rem);
+  color: var(--ink);
+}
+.section-counter em {
+  font-style: normal;
+  font-size: 1rem;
+  color: var(--ink-3);
+}
+.section-counter small {
+  font-family: var(--ff-body);
+  font-size: .68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .18em;
+  color: var(--muted);
+  margin-left: 1rem;
+  padding-left: 1rem;
+  position: relative;
+  align-self: center;
+}
+.section-counter small::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 50%;
+  width: 14px; height: 1px;
+  background: var(--muted);
+}
+.section-counter.dark span { color: var(--light-ink); }
+.section-counter.dark em,
+.section-counter.dark small { color: #6b6b74; }
+.section-counter.dark small::before { background: #6b6b74; }
+
+@media (max-width: 720px) {
+  .section-counter { top: 1.25rem; right: 1.25rem; }
+  .section-counter small { display: none; }
+}
+
+/* Sections are relative so the counter can absolute inside them */
+.section,
+.trust-strip { position: relative; }
 
 /* ============================================================
    CURVE DIVIDERS — soft SVG arcs between dark/light sections
