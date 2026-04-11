@@ -1094,6 +1094,561 @@ h1, h2, h3, h4 {
 }
 
 /* ============================================================
+   BUTTON VARIANTS used by the new sections
+   ============================================================ */
+.btn-outline-green {
+  background: transparent;
+  color: #fff;
+  border-color: var(--green);
+}
+.btn-outline-green:hover { background: var(--green); color: #000; }
+
+.btn-outline-dark {
+  background: transparent;
+  color: #0a0a0a;
+  border-color: #0a0a0a;
+}
+.btn-outline-dark:hover { background: #0a0a0a; color: #fff; }
+
+.btn-white {
+  background: #fff;
+  color: #0a0a0a;
+}
+.btn-white:hover { background: #f0f0f0; }
+.btn-large { padding: 1.1rem 2.2rem; font-size: 1rem; }
+
+/* ============================================================
+   SECTION: "All your signage needs covered"
+   ============================================================ */
+.signage-covered {
+  background: #0a0a0e;
+  color: #fff;
+  padding: 7rem 0;
+}
+.sc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+.sc-copy h2 {
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  font-size: clamp(2.2rem, 4.5vw, 3.8rem);
+  line-height: 1.05;
+  letter-spacing: -.02em;
+  margin: 0 0 1.5rem;
+}
+.sc-copy p {
+  max-width: 46ch;
+  color: #b9b9c2;
+  font-size: 1rem;
+  line-height: 1.65;
+  margin: 0 0 2rem;
+}
+
+/* Orbit graphic: three concentric rings + centred logos */
+.sc-orbit {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.orbit-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.08);
+}
+.orbit-1 { inset: 0%;  }
+.orbit-2 { inset: 14%; border-color: rgba(255,255,255,.10); }
+.orbit-3 { inset: 28%; border-color: rgba(255,255,255,.12); }
+.orbit-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  text-align: center;
+}
+.ol-main {
+  font-family: "Inter", sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  color: #fff;
+  letter-spacing: -.01em;
+}
+.ol-row {
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.ol-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+.ol-brand sup { font-size: .5em; color: var(--muted); }
+.ol-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  font-size: 1.1rem;
+}
+.ol-mark.np { color: #fff; }
+.ol-mark.heart {
+  background: linear-gradient(135deg, #ff4d8b, #62d0ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: 1.3rem;
+}
+
+/* ============================================================
+   SECTION: "Delivering for the trade time and time again"
+   ============================================================ */
+.delivering {
+  background: #fff;
+  color: #0a0a0a;
+  padding: 0;
+}
+.deliver-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1.1fr .5fr;
+  min-height: 100vh;
+}
+.deliver-image {
+  background-size: cover;
+  background-position: center;
+}
+.deliver-left {
+  background:
+    linear-gradient(135deg, rgba(0,0,0,.35), transparent 40%),
+    radial-gradient(circle at 30% 40%, #ff2a7a 0%, transparent 40%),
+    linear-gradient(120deg, #2a2a3a 0%, #1a1a2a 60%, #0a0a10 100%);
+}
+.deliver-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 5rem 4rem;
+}
+.deliver-copy h2 {
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  font-size: clamp(2rem, 4.2vw, 3.5rem);
+  line-height: 1.05;
+  letter-spacing: -.02em;
+  margin: 0 0 1.5rem;
+  color: #0a0a0a;
+}
+.deliver-copy p {
+  max-width: 46ch;
+  color: #555;
+  font-size: 1rem;
+  line-height: 1.65;
+  margin: 0 0 1rem;
+}
+.deliver-copy .btn { margin-top: 1.5rem; align-self: flex-start; }
+.deliver-right {
+  position: relative;
+  overflow: hidden;
+}
+.deliver-right-img {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.2), transparent 30%),
+    radial-gradient(circle at 60% 50%, #f2e8d8, #c8bfae 60%, #5a5449);
+}
+.green-bar {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 14px;
+  background: var(--green);
+  z-index: 2;
+}
+
+/* ============================================================
+   SECTION: "Where the magic happens"
+   ============================================================ */
+.magic {
+  background: #0a0a0e;
+  color: #fff;
+  padding: 6rem 0 7rem;
+  overflow: hidden;
+}
+.magic-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 3rem;
+  align-items: start;
+  position: relative;
+  min-height: 640px;
+}
+.magic-copy {
+  padding-top: 3rem;
+}
+.magic-copy h2 {
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  font-size: clamp(2.2rem, 4.8vw, 4rem);
+  line-height: 1.02;
+  letter-spacing: -.02em;
+  margin: 0 0 1.5rem;
+  position: relative;
+  display: inline-block;
+}
+.magic-copy p {
+  max-width: 38ch;
+  color: #b9b9c2;
+  line-height: 1.65;
+  margin: 0 0 2rem;
+}
+.magic-bolt {
+  position: relative;
+  display: inline-block;
+  margin-left: .3em;
+  vertical-align: middle;
+  font-size: .85em;
+}
+.magic-bolt .bolt {
+  display: inline-block;
+  color: #ffd23a;
+  font-size: 1.1em;
+  filter: drop-shadow(0 0 .2em rgba(255,210,58,.8)) drop-shadow(0 0 .6em rgba(255,210,58,.4));
+  animation: boltPulse 2.2s ease-in-out infinite;
+}
+.magic-bolt .spark {
+  position: absolute;
+  color: #ffd23a;
+  font-size: .5em;
+  filter: drop-shadow(0 0 .3em #ffd23a);
+}
+.magic-bolt .spark.s1 { top: -.3em; left: -.3em;  animation: sparkle 2s ease-in-out infinite; }
+.magic-bolt .spark.s2 { top: -.2em; right: -.35em; animation: sparkle 2s ease-in-out infinite .7s; }
+@keyframes boltPulse {
+  0%, 100% { transform: rotate(0) scale(1); }
+  50%      { transform: rotate(-5deg) scale(1.08); }
+}
+@keyframes sparkle {
+  0%, 100% { opacity: .3; transform: scale(.9); }
+  50%      { opacity: 1;  transform: scale(1.2); }
+}
+
+/* Collage */
+.magic-collage {
+  position: relative;
+  min-height: 640px;
+}
+.m-tile {
+  position: absolute;
+  border-radius: 8px;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 20px 60px -25px rgba(0,0,0,.8);
+  overflow: hidden;
+}
+.m-1 {
+  top: 0; right: 24%; width: 44%; aspect-ratio: 16 / 10;
+  background: linear-gradient(135deg,#3a1a5a 0%,#ff1493 40%,#ff6b35 75%,#1a0a2a 100%);
+}
+.m-2 {
+  top: 4%; right: 0; width: 20%; aspect-ratio: 4 / 5;
+  background: linear-gradient(180deg,#2a1a0a,#ff6b00 40%,#ffd23a 80%,#2a1a0a);
+}
+.m-3 {
+  bottom: 0; left: -6%; width: 26%; aspect-ratio: 4 / 3;
+  background: linear-gradient(135deg,#1a1a1a 0%,#2a2a2a 100%);
+}
+.m-4 {
+  bottom: 2%; left: 24%; width: 24%; aspect-ratio: 4 / 3;
+  background: linear-gradient(135deg,#1a2230 0%,#334455 100%);
+}
+.m-5 {
+  bottom: 0; right: 8%; width: 42%; aspect-ratio: 5 / 3;
+  background:
+    radial-gradient(circle at 40% 50%, rgba(255,255,255,.2), transparent 50%),
+    linear-gradient(135deg,#1a1a1a 0%,#3a3a3a 50%,#1a1a1a 100%);
+}
+
+/* ============================================================
+   SECTION: "Download our brochure"
+   ============================================================ */
+.brochure {
+  background: #0a0a0e;
+  color: #fff;
+  padding: 6rem 0 7rem;
+}
+.brochure-card {
+  position: relative;
+  background: #111115;
+  border-radius: 20px;
+  padding: 4rem;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 4rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  border: 1px solid #1e1e24;
+}
+.brochure-book {
+  position: absolute;
+  top: -28px;
+  right: 80px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #ff6b00;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 30px -8px rgba(255,107,0,.6);
+}
+.brochure-left h2 {
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  font-size: clamp(2rem, 3.8vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -.02em;
+  margin: 0 0 .75rem;
+}
+.brochure-left p {
+  color: #b9b9c2;
+  font-size: .95rem;
+  margin: 0 0 3rem;
+}
+.dot-logo {
+  width: 90px;
+  height: 90px;
+  background:
+    radial-gradient(circle at center, #d9f24a .18em, transparent .22em) 0 0 / 14px 14px,
+    transparent;
+  mask: radial-gradient(circle at 35% 50%, #000 30%, transparent 32%),
+        radial-gradient(circle at 65% 50%, #000 30%, transparent 32%);
+  -webkit-mask: radial-gradient(circle at 35% 50%, #000 30%, transparent 32%),
+                radial-gradient(circle at 65% 50%, #000 30%, transparent 32%);
+  opacity: .9;
+}
+.brochure-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.brochure-form label {
+  display: flex;
+  flex-direction: column;
+  font-size: .85rem;
+  color: #d6d6db;
+  font-weight: 500;
+}
+.brochure-form input[type="text"],
+.brochure-form input[type="email"] {
+  margin-top: .5rem;
+  padding: .9rem 1rem;
+  border: 1px solid #2a2a30;
+  border-radius: 8px;
+  background: #050508;
+  color: #fff;
+  font: inherit;
+}
+.brochure-form input:focus {
+  outline: 2px solid var(--green);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+.check-label {
+  flex-direction: row !important;
+  align-items: center;
+  gap: .6rem;
+}
+.check-label input { accent-color: var(--green); width: 16px; height: 16px; }
+
+.captcha-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f9f9f9;
+  color: #000;
+  border: 1px solid #d3d3d3;
+  border-radius: 4px;
+  padding: .75rem 1rem;
+  max-width: 300px;
+  font-size: .85rem;
+}
+.captcha-box { display: flex; align-items: center; gap: .75rem; }
+.captcha-check {
+  width: 22px;
+  height: 22px;
+  border: 2px solid #c1c1c1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #34a853;
+  font-size: .9rem;
+  border-radius: 2px;
+  background: #fff;
+}
+.captcha-logo { display: flex; align-items: center; gap: .4rem; }
+.captcha-logo-mark { font-size: 1.5rem; color: #4a90e2; }
+.captcha-logo strong { display: block; font-size: .7rem; font-weight: 600; }
+.captcha-logo small { font-size: .55rem; color: #777; }
+.brochure-form .btn { align-self: flex-start; margin-top: .5rem; }
+
+/* ============================================================
+   SECTION: "Work with us"
+   ============================================================ */
+.work-with-us {
+  background: #0a0a0e;
+  color: #fff;
+  padding: 6rem 0 0;
+  overflow: hidden;
+}
+.wwu-inner {
+  position: relative;
+  text-align: center;
+  padding-bottom: 10rem;
+}
+.wwu-intro {
+  max-width: 42ch;
+  margin: 0 auto 2.5rem;
+  color: #d6d6db;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+.wwu-headline-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+  flex-wrap: nowrap;
+}
+.wwu-headline {
+  font-family: "Anton", "Bebas Neue", sans-serif;
+  font-size: clamp(3rem, 8vw, 7rem);
+  font-weight: 900;
+  margin: 0;
+  letter-spacing: -.01em;
+  line-height: 1;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: .3em;
+}
+.wwu-with {
+  font-family: "Caveat", "Brush Script MT", cursive;
+  font-size: .55em;
+  font-weight: 400;
+  color: #fff;
+  background: transparent;
+  padding: .15em .5em;
+  border-radius: 999px;
+  border: 2px solid var(--green);
+  transform: rotate(-4deg);
+  display: inline-block;
+}
+.wwu-deco {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  position: relative;
+}
+.deco-hand {
+  font-size: 2rem;
+  color: #ff6b00;
+  transform: rotate(-15deg);
+  animation: bob 2.2s ease-in-out infinite;
+}
+.deco-arrow {
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+.deco-arrow-yellow  { color: #ffd23a; transform: rotate(20deg); }
+.deco-arrow-yellow2 { color: #ffd23a; }
+.deco-arrow-blue    { color: #62d0ff; }
+.deco-dots {
+  color: #ff4d8b;
+  font-size: 1rem;
+  letter-spacing: -.2em;
+}
+@keyframes bob {
+  0%,100% { transform: rotate(-15deg) translateY(0); }
+  50%     { transform: rotate(-15deg) translateY(-4px); }
+}
+
+.wwu-dome {
+  position: absolute;
+  left: 50%;
+  bottom: -55%;
+  transform: translateX(-50%);
+  width: min(140vw, 1400px);
+  aspect-ratio: 2 / 1;
+  background: var(--green);
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 4rem;
+  z-index: -1;
+}
+.wwu-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .4rem;
+  color: #0a0a0e;
+}
+.wwu-mark {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+.wwu-logo span {
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: -.01em;
+}
+
+/* ============================================================
+   RESPONSIVE TUNING for the new sections
+   ============================================================ */
+@media (max-width: 960px) {
+  .sc-grid,
+  .magic-grid { grid-template-columns: 1fr; gap: 3rem; }
+  .sc-orbit { max-width: 380px; }
+  .deliver-grid { grid-template-columns: 1fr; min-height: auto; }
+  .deliver-left { min-height: 320px; }
+  .deliver-copy { padding: 3rem 1.5rem; }
+  .deliver-right { display: none; }
+  .magic-collage { min-height: 520px; }
+  .brochure-card { grid-template-columns: 1fr; padding: 2.5rem; gap: 2.5rem; }
+  .brochure-book { right: 30px; top: -24px; }
+  .wwu-headline-row { gap: .5rem; }
+  .deco-hand, .deco-arrow { font-size: 1.4rem; }
+}
+@media (max-width: 640px) {
+  .magic-collage { min-height: 440px; }
+  .m-1 { width: 60%; right: 10%; }
+  .m-2 { width: 28%; }
+  .m-3 { width: 34%; }
+  .m-4 { width: 32%; left: 34%; }
+  .m-5 { width: 52%; right: 0; }
+  .wwu-inner { padding-bottom: 7rem; }
+}
+
+/* ============================================================
    FOOTER
    ============================================================ */
 .site-footer {
