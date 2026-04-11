@@ -157,15 +157,18 @@ h1, h2, h3, h4 {
 .nav-toggle span { display: block; height: 2px; background: #fff; border-radius: 2px; }
 
 /* ============================================================
-   HERO — oversized display headline with inline "pill" images
+   HERO — above the fold, display headline with inline image pills
    ============================================================ */
 .hero {
   position: relative;
-  min-height: 100vh;
-  padding: 8rem 2rem 6rem;
+  height: 100vh;
+  min-height: 640px;
+  max-height: 980px;
+  padding: 7rem 2.5rem 7rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
   overflow: hidden;
 }
 .hero::before {
@@ -173,227 +176,193 @@ h1, h2, h3, h4 {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(1400px 700px at 80% 90%, rgba(255,45,85,.12), transparent 60%),
-    radial-gradient(1000px 600px at 15% 20%, rgba(98,208,255,.08), transparent 60%);
+    radial-gradient(1200px 600px at 80% 90%, rgba(255,45,85,.10), transparent 60%),
+    radial-gradient(900px 500px at 15% 20%, rgba(98,208,255,.06), transparent 60%);
   pointer-events: none;
 }
 
 .hero-headline {
   position: relative;
-  margin: 0;
-  padding: 0 1rem;
+  margin: 0 auto;
+  padding: 0;
   font-family: "Anton", "Bebas Neue", "Impact", sans-serif;
   font-weight: 900;
-  font-size: clamp(3rem, 11vw, 11rem);
-  line-height: .9;
+  /* Sized so all three lines fit comfortably in 100vh on desktop */
+  font-size: clamp(2rem, 6.2vw, 6.25rem);
+  line-height: .92;
   letter-spacing: -.015em;
   color: #fff;
   text-align: center;
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: 1500px;
+  display: flex;
+  flex-direction: column;
+  gap: .18em;
 }
 .hero-headline .line {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;               /* never break a line */
   align-items: center;
   justify-content: center;
-  gap: clamp(.4rem, 1.2vw, 1.1rem);
-  padding: .1em 0;
+  gap: clamp(.35rem, .9vw, .9rem);
+  min-width: 0;
 }
-.hero-headline .word { display: inline-block; white-space: nowrap; }
+.hero-headline .word {
+  display: inline-block;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
 
-/* Inline image "pills" — coloured placeholders you can swap for real photos */
+/* Inline image "pills" — coloured placeholders you can swap for real photos.
+   Sizes are in em so they scale with the headline font-size. */
 .pill {
   display: inline-block;
   vertical-align: middle;
   border-radius: 999px;
   flex-shrink: 0;
-  box-shadow: 0 8px 30px -10px rgba(0,0,0,.8), inset 0 0 0 2px rgba(255,255,255,.05);
+  box-shadow: 0 .1em .3em -.1em rgba(0,0,0,.8), inset 0 0 0 2px rgba(255,255,255,.04);
   background-size: cover;
   background-position: center;
+  position: relative;
+}
+.pill::after {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 /* Line 1: starman, asterisk, speech bubble, hello neon */
 .pill-starman {
-  width: clamp(90px, 12vw, 200px);
-  height: clamp(55px, 7vw, 115px);
+  width: 1.6em;
+  height: .78em;
   background:
     linear-gradient(135deg, rgba(255,255,255,.15), transparent),
     linear-gradient(90deg, #1b2b66 0%, #2c3e8e 50%, #0e183b 100%);
-  position: relative;
 }
 .pill-starman::after {
   content: "STARMAN";
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   font-family: "Brush Script MT", cursive;
   color: #ff4d8b;
-  font-size: clamp(14px, 1.8vw, 30px);
-  text-shadow: 0 0 12px rgba(255,77,139,.9), 0 0 24px rgba(255,77,139,.6);
+  font-size: .18em;
+  text-shadow: 0 0 .4em rgba(255,77,139,.9), 0 0 .8em rgba(255,77,139,.6);
   letter-spacing: .05em;
 }
 .pill-asterisk {
-  width: clamp(55px, 6.5vw, 110px);
-  height: clamp(55px, 6.5vw, 110px);
+  width: .78em;
+  height: .78em;
   background: radial-gradient(circle at 35% 30%, #ffb3cc, #ff4d8b 60%, #c2185b);
-  position: relative;
 }
 .pill-asterisk::after {
   content: "\273D";
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   color: #ff1f5a;
-  font-size: clamp(30px, 4vw, 64px);
+  font-size: .48em;
 }
 .pill-bubble {
-  width: clamp(110px, 14vw, 220px);
-  height: clamp(55px, 6.5vw, 110px);
+  width: 1.6em;
+  height: .78em;
   background: linear-gradient(180deg, #9fe3ff, #62d0ff 60%, #3aa7d6);
-  position: relative;
 }
 .pill-bubble::after {
   content: "\2665";
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   color: #bfefff;
-  font-size: clamp(22px, 2.8vw, 48px);
+  font-size: .3em;
 }
 .pill-hello {
-  width: clamp(100px, 13vw, 200px);
-  height: clamp(55px, 6.5vw, 110px);
+  width: 1.5em;
+  height: .78em;
   background:
     radial-gradient(circle at 30% 70%, rgba(255,0,150,.2), transparent 60%),
     #120016;
-  position: relative;
   border: 2px solid rgba(255,20,147,.3);
 }
 .pill-hello::after {
   content: "hello";
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   font-family: "Brush Script MT", cursive;
   color: #ff1493;
-  font-size: clamp(22px, 3vw, 52px);
-  text-shadow: 0 0 10px #ff1493, 0 0 22px rgba(255,20,147,.7);
+  font-size: .28em;
+  text-shadow: 0 0 .4em #ff1493, 0 0 .8em rgba(255,20,147,.7);
 }
 
 /* Line 2: red/yellow neon bar, dot grid, green squiggle */
 .pill-neon-red {
-  width: clamp(150px, 20vw, 320px);
-  height: clamp(55px, 7vw, 115px);
+  width: 2em;
+  height: .78em;
   background:
     linear-gradient(180deg, #ff3b30 0%, #ff3b30 48%, #ffb020 52%, #ffb020 100%);
-  position: relative;
-  box-shadow: 0 0 30px rgba(255,59,48,.4), 0 0 60px rgba(255,176,32,.3);
+  box-shadow: 0 0 .5em rgba(255,59,48,.4), 0 0 1em rgba(255,176,32,.3);
 }
 .pill-neon-red::after {
   content: "";
-  position: absolute;
-  inset: 0;
   border-radius: 999px;
   background: linear-gradient(180deg, rgba(255,255,255,.4), transparent 40%);
   mix-blend-mode: overlay;
 }
 .pill-dots {
-  width: clamp(90px, 11vw, 180px);
-  height: clamp(55px, 7vw, 115px);
+  width: 1.35em;
+  height: .78em;
   background:
-    radial-gradient(circle at center, #ffd23a 2px, transparent 3px) 0 0 / 14px 14px,
+    radial-gradient(circle at center, #ffd23a .13em, transparent .15em) 0 0 / .22em .22em,
     #1a1000;
 }
 .pill-squiggle {
-  width: clamp(75px, 9vw, 150px);
-  height: clamp(55px, 7vw, 115px);
+  width: .95em;
+  height: .78em;
   background: #0a0a0a;
-  position: relative;
 }
 .pill-squiggle::after {
   content: "\223F";
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   color: var(--green);
-  font-size: clamp(40px, 5.5vw, 90px);
-  text-shadow: 0 0 14px var(--green);
-  line-height: 1;
+  font-size: .7em;
+  text-shadow: 0 0 .2em var(--green);
 }
 
 /* Line 3: orange bolt, light-up "A", winged pill */
 .pill-bolt {
-  width: clamp(55px, 6.5vw, 110px);
-  height: clamp(55px, 6.5vw, 110px);
+  width: .78em;
+  height: .78em;
   background: radial-gradient(circle at 35% 30%, #ffc27a, #ff7a00 60%, #c24e00);
-  position: relative;
 }
 .pill-bolt::after {
   content: "\26A1";
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   color: #fff2d0;
-  font-size: clamp(30px, 4vw, 64px);
+  font-size: .48em;
 }
 .pill-letter-a {
-  width: clamp(110px, 14vw, 220px);
-  height: clamp(70px, 9vw, 150px);
+  width: 1.55em;
+  height: .95em;
   background:
     linear-gradient(180deg, rgba(255,255,255,.15), transparent 40%),
-    repeating-linear-gradient(90deg, #e8e1d3 0 6px, #d8d0be 6px 12px);
-  position: relative;
-  box-shadow: inset 0 -10px 30px rgba(0,0,0,.3), 0 20px 50px -15px rgba(255,200,80,.4);
+    repeating-linear-gradient(90deg, #e8e1d3 0 .08em, #d8d0be .08em .16em);
+  box-shadow: inset 0 -.12em .3em rgba(0,0,0,.3), 0 .2em .5em -.15em rgba(255,200,80,.4);
 }
 .pill-letter-a::after {
   content: "A";
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   color: #fff8d0;
   font-family: "Anton", "Bebas Neue", sans-serif;
-  font-size: clamp(40px, 6vw, 100px);
-  text-shadow: 0 0 8px #ffcc33, 0 0 20px #ff9900, 0 0 40px rgba(255,153,0,.6);
+  font-size: .78em;
+  text-shadow: 0 0 .1em #ffcc33, 0 0 .25em #ff9900, 0 0 .5em rgba(255,153,0,.6);
 }
 .pill-wings {
-  width: clamp(120px, 15vw, 240px);
-  height: clamp(55px, 7vw, 115px);
+  width: 1.7em;
+  height: .78em;
   background: linear-gradient(135deg, #4b2a10, #8a4a1a);
-  position: relative;
 }
 .pill-wings::after {
   content: "\1F985";
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: clamp(28px, 3.5vw, 60px);
+  font-size: .45em;
 }
 
 /* Hero tagline (bottom-right) */
 .hero-tagline {
   position: absolute;
   right: 2.5rem;
-  bottom: 3rem;
-  max-width: 360px;
-  color: #d6d6db;
-  font-size: .95rem;
+  bottom: 2.25rem;
+  max-width: 320px;
+  color: #c9c9d0;
+  font-size: .85rem;
   line-height: 1.5;
   text-align: right;
   margin: 0;
@@ -742,7 +711,13 @@ h1, h2, h3, h4 {
 @media (max-width: 1024px) {
   .main-nav ul { gap: 0; }
   .main-nav a { padding: .5rem .7rem; font-size: .85rem; }
-  .hero-tagline { position: static; text-align: center; margin: 2.5rem auto 0; }
+  .hero { padding: 6rem 1.5rem 5rem; max-height: none; }
+  .hero-tagline {
+    position: static;
+    text-align: center;
+    margin: 2rem auto 0;
+    max-width: 460px;
+  }
   .floating-mark { display: none; }
 }
 @media (max-width: 860px) {
@@ -774,9 +749,13 @@ h1, h2, h3, h4 {
     border-radius: 18px;
   }
   .main-nav a { justify-content: flex-start; }
-  .hero { padding: 7rem 1.25rem 5rem; min-height: auto; }
-  .hero-headline { font-size: clamp(2.5rem, 14vw, 6rem); }
-  .hero-headline .line { gap: .4rem; }
+  .hero {
+    height: auto;
+    min-height: auto;
+    padding: 6rem 1rem 4rem;
+  }
+  .hero-headline { font-size: clamp(2.2rem, 11vw, 4.5rem); }
+  .hero-headline .line { gap: .3rem; }
   .contact-form { grid-template-columns: 1fr; }
   .footer-grid { grid-template-columns: 1fr; }
   .logo { font-size: 1.5rem; }
