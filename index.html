@@ -5,9 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The Sign Group — Signage and Lighting for the Trade</title>
   <meta name="description" content="Expert signage and lighting manufacturers, serving the sign and display trade for over 20 years." />
+  <meta name="theme-color" content="#0a0a0e" />
+
+  <!-- Fonts: Anton for display, Inter for UI, Caveat for script accents -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Caveat:wght@500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <!-- Scroll progress bar -->
+  <div class="scroll-progress" aria-hidden="true"><span></span></div>
+
   <header class="site-header">
     <a href="#" class="logo" aria-label="The Sign Group">
       <span>The</span>
@@ -116,7 +126,7 @@
       </a>
 
       <div class="container">
-        <header class="products-head">
+        <header class="products-head reveal">
           <div>
             <h2>What do you need<br/>for your next project?</h2>
           </div>
@@ -131,7 +141,7 @@
         </header>
       </div>
 
-      <div class="carousel-wrap">
+      <div class="carousel-wrap reveal">
         <ul class="carousel" id="productCarousel">
           <li class="pcard">
             <div class="pcard-img pcard-1"></div>
@@ -172,12 +182,12 @@
     <!-- =================== SECTION: NEEDS COVERED =================== -->
     <section id="company" class="section signage-covered">
       <div class="container sc-grid">
-        <div class="sc-copy">
+        <div class="sc-copy reveal">
           <h2>All your signage<br/>needs covered</h2>
           <p>Using sophisticated equipment and manufacturing techniques, we are able to create brand-accurate and innovative signs that capture the eye and the imagination.</p>
           <a href="#about" class="btn btn-outline-green">About us</a>
         </div>
-        <div class="sc-orbit" aria-hidden="true">
+        <div class="sc-orbit reveal" aria-hidden="true">
           <div class="orbit-ring orbit-1"></div>
           <div class="orbit-ring orbit-2"></div>
           <div class="orbit-ring orbit-3"></div>
@@ -195,8 +205,8 @@
     <!-- =================== SECTION: DELIVERING =================== -->
     <section class="section delivering light-bg">
       <div class="deliver-grid">
-        <div class="deliver-image deliver-left" aria-hidden="true"></div>
-        <div class="deliver-copy">
+        <div class="deliver-image deliver-left reveal" aria-hidden="true"></div>
+        <div class="deliver-copy reveal">
           <h2>Delivering for<br/>the trade time<br/>and time again</h2>
           <p>We work closely with our customers to make sure we offer the best solution for them and their clients needs.</p>
           <p>Our friendly and professional way of working is often described as &lsquo;refreshing&rsquo; by our customers, click below to see why.</p>
@@ -212,7 +222,7 @@
     <!-- =================== SECTION: MAGIC =================== -->
     <section class="section magic">
       <div class="container magic-grid">
-        <div class="magic-copy">
+        <div class="magic-copy reveal">
           <h2>
             Where the<br/>magic happens
             <span class="magic-bolt" aria-hidden="true">
@@ -224,7 +234,7 @@
           <p>Our workshop is a hive of activity where we embrace challenges and help bring your ideas to life.</p>
           <a href="#" class="btn btn-outline-green">Explore the workshop</a>
         </div>
-        <div class="magic-collage" aria-hidden="true">
+        <div class="magic-collage reveal-stagger" aria-hidden="true">
           <div class="m-tile m-1"></div>
           <div class="m-tile m-2"></div>
           <div class="m-tile m-3"></div>
@@ -237,7 +247,7 @@
     <!-- =================== SECTION: BROCHURE =================== -->
     <section id="contact" class="section brochure">
       <div class="container">
-        <div class="brochure-card">
+        <div class="brochure-card reveal">
           <div class="brochure-book" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
           </div>
@@ -280,7 +290,7 @@
 
     <!-- =================== SECTION: WORK WITH US =================== -->
     <section class="section work-with-us">
-      <div class="container wwu-top">
+      <div class="container wwu-top reveal">
         <p class="wwu-intro">We&rsquo;re always looking to work with creative businesses, so if you&rsquo;re looking for a stand out piece of signage, get in touch!</p>
         <div class="wwu-headline-row">
           <span class="wwu-deco wwu-deco-left" aria-hidden="true">
@@ -383,13 +393,61 @@
           else                  header.classList.remove('on-light');
         });
       }, {
-        // Triggers when any part of the section crosses the top ~100px
-        // where the header sits.
         rootMargin: '-40px 0px -92% 0px',
         threshold: 0
       });
       lightSections.forEach((el) => io.observe(el));
     }
+
+    // Scroll progress bar
+    const progress = document.querySelector('.scroll-progress span');
+    if (progress) {
+      const setProgress = () => {
+        const h = document.documentElement;
+        const scrolled = h.scrollTop / (h.scrollHeight - h.clientHeight);
+        progress.style.width = (Math.min(Math.max(scrolled, 0), 1) * 100) + '%';
+      };
+      setProgress();
+      window.addEventListener('scroll', setProgress, { passive: true });
+      window.addEventListener('resize', setProgress);
+    }
+
+    // Generic scroll reveal — adds .in-view when an element enters
+    // the viewport. Works for both .reveal and .reveal-stagger.
+    if ('IntersectionObserver' in window) {
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add('in-view');
+            revealObserver.unobserve(e.target);
+          }
+        });
+      }, { rootMargin: '0px 0px -10% 0px', threshold: 0.05 });
+      document.querySelectorAll('.reveal, .reveal-stagger').forEach((el) => revealObserver.observe(el));
+    } else {
+      document.querySelectorAll('.reveal, .reveal-stagger').forEach((el) => el.classList.add('in-view'));
+    }
+
+    // Header scroll state — tiny solid shadow once scrolled past hero
+    const setHeaderState = () => {
+      if (window.scrollY > 60) header.classList.add('scrolled');
+      else header.classList.remove('scrolled');
+    };
+    setHeaderState();
+    window.addEventListener('scroll', setHeaderState, { passive: true });
+
+    // Magnetic CTA micro-interaction — buttons with .btn-magnet
+    // tilt slightly toward the cursor on hover.
+    document.querySelectorAll('.btn-magnet').forEach((btn) => {
+      const strength = 14;
+      btn.addEventListener('mousemove', (e) => {
+        const r = btn.getBoundingClientRect();
+        const x = e.clientX - r.left - r.width  / 2;
+        const y = e.clientY - r.top  - r.height / 2;
+        btn.style.transform = 'translate(' + (x / r.width * strength) + 'px, ' + (y / r.height * strength) + 'px)';
+      });
+      btn.addEventListener('mouseleave', () => { btn.style.transform = ''; });
+    });
   </script>
 </body>
 </html>
