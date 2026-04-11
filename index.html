@@ -99,7 +99,7 @@
     </section>
 
     <!-- =================== PRODUCTS CAROUSEL =================== -->
-    <section id="products" class="section products-light">
+    <section id="products" class="section products-light light-bg">
       <!-- Rotating warranty badge -->
       <a href="#" class="warranty-badge" aria-label="5 year warranty on selected Neonplus products">
         <svg viewBox="0 0 200 200" aria-hidden="true">
@@ -193,7 +193,7 @@
     </section>
 
     <!-- =================== SECTION: DELIVERING =================== -->
-    <section class="section delivering">
+    <section class="section delivering light-bg">
       <div class="deliver-grid">
         <div class="deliver-image deliver-left" aria-hidden="true"></div>
         <div class="deliver-copy">
@@ -280,7 +280,7 @@
 
     <!-- =================== SECTION: WORK WITH US =================== -->
     <section class="section work-with-us">
-      <div class="container wwu-inner">
+      <div class="container wwu-top">
         <p class="wwu-intro">We&rsquo;re always looking to work with creative businesses, so if you&rsquo;re looking for a stand out piece of signage, get in touch!</p>
         <div class="wwu-headline-row">
           <span class="wwu-deco wwu-deco-left" aria-hidden="true">
@@ -299,11 +299,11 @@
           </span>
         </div>
         <a href="#contact" class="btn btn-white btn-large">Get in touch</a>
-        <div class="wwu-dome" aria-hidden="true">
-          <div class="wwu-logo">
-            <div class="wwu-mark">&#9678;</div>
-            <span>TheSignGroup</span>
-          </div>
+      </div>
+      <div class="wwu-dome" aria-hidden="true">
+        <div class="wwu-logo">
+          <div class="wwu-mark">&#9678;</div>
+          <span>TheSignGroup</span>
         </div>
       </div>
     </section>
@@ -371,6 +371,25 @@
     };
     prevBtn && prevBtn.addEventListener('click', () => scrollByCard(-1));
     nextBtn && nextBtn.addEventListener('click', () => scrollByCard(1));
+
+    // Header colour flip: when a light-bg section is behind the header,
+    // switch the header to dark text.
+    const header = document.querySelector('.site-header');
+    const lightSections = document.querySelectorAll('.light-bg');
+    if (header && lightSections.length && 'IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) header.classList.add('on-light');
+          else                  header.classList.remove('on-light');
+        });
+      }, {
+        // Triggers when any part of the section crosses the top ~100px
+        // where the header sits.
+        rootMargin: '-40px 0px -92% 0px',
+        threshold: 0
+      });
+      lightSections.forEach((el) => io.observe(el));
+    }
   </script>
 </body>
 </html>

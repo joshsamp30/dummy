@@ -159,6 +159,23 @@ h1, h2, h3, h4 {
 }
 .nav-toggle span { display: block; height: 2px; background: #fff; border-radius: 2px; }
 
+/* Header colour flip when it sits over a light section */
+.site-header { transition: color .25s ease; }
+.site-header.on-light .logo { color: #0a0a0a; }
+.site-header.on-light .logo sup { color: #0a0a0a; }
+.site-header.on-light .main-nav ul {
+  background: rgba(255,255,255,.72);
+  border-color: rgba(0,0,0,.12);
+}
+.site-header.on-light .main-nav a { color: #0a0a0a; }
+.site-header.on-light .main-nav a:hover { background: rgba(0,0,0,.08); }
+.site-header.on-light .has-dropdown > a {
+  background: #0a0a0a;
+  color: #fff;
+}
+.site-header.on-light .has-dropdown > a:hover { background: #222; }
+.site-header.on-light .nav-toggle span { background: #0a0a0a; }
+
 /* ============================================================
    HERO — above the fold, display headline with inline image pills
    ============================================================ */
@@ -1515,14 +1532,16 @@ h1, h2, h3, h4 {
   color: #fff;
   padding: 6rem 0 0;
   overflow: hidden;
-}
-.wwu-inner {
   position: relative;
+}
+.wwu-top {
+  position: relative;
+  z-index: 2;
   text-align: center;
-  padding-bottom: 10rem;
+  padding-bottom: 4rem;
 }
 .wwu-intro {
-  max-width: 42ch;
+  max-width: 54ch;
   margin: 0 auto 2.5rem;
   color: #d6d6db;
   font-size: 1rem;
@@ -1532,13 +1551,13 @@ h1, h2, h3, h4 {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
+  gap: 1.25rem;
   margin-bottom: 2.5rem;
   flex-wrap: nowrap;
 }
 .wwu-headline {
   font-family: "Anton", "Bebas Neue", sans-serif;
-  font-size: clamp(3rem, 8vw, 7rem);
+  font-size: clamp(2.8rem, 7vw, 6rem);
   font-weight: 900;
   margin: 0;
   letter-spacing: -.01em;
@@ -1546,34 +1565,35 @@ h1, h2, h3, h4 {
   color: #fff;
   display: inline-flex;
   align-items: center;
-  gap: .3em;
+  gap: .35em;
 }
 .wwu-with {
   font-family: "Caveat", "Brush Script MT", cursive;
-  font-size: .55em;
+  font-size: .42em;
   font-weight: 400;
   color: #fff;
   background: transparent;
-  padding: .15em .5em;
+  padding: .2em .75em .3em;
   border-radius: 999px;
   border: 2px solid var(--green);
   transform: rotate(-4deg);
   display: inline-block;
+  line-height: 1;
 }
 .wwu-deco {
   display: inline-flex;
   align-items: center;
   gap: .4rem;
   position: relative;
+  flex-shrink: 0;
 }
 .deco-hand {
-  font-size: 2rem;
-  color: #ff6b00;
+  font-size: 1.8rem;
   transform: rotate(-15deg);
   animation: bob 2.2s ease-in-out infinite;
 }
 .deco-arrow {
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   font-weight: 700;
 }
 .deco-arrow-yellow  { color: #ffd23a; transform: rotate(20deg); }
@@ -1589,37 +1609,39 @@ h1, h2, h3, h4 {
   50%     { transform: rotate(-15deg) translateY(-4px); }
 }
 
+/* Dome — a flat-bottomed half-circle anchored below the content.
+   Uses negative margin so the button floats just above its top edge. */
 .wwu-dome {
-  position: absolute;
-  left: 50%;
-  bottom: -55%;
-  transform: translateX(-50%);
-  width: min(140vw, 1400px);
+  position: relative;
+  z-index: 1;
+  width: min(150vw, 1600px);
   aspect-ratio: 2 / 1;
+  margin: -5rem auto 0;
   background: var(--green);
   border-radius: 50% 50% 0 0 / 100% 100% 0 0;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 4rem;
-  z-index: -1;
+  padding-top: 7rem;
 }
 .wwu-logo {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: .4rem;
+  gap: .35rem;
   color: #0a0a0e;
 }
 .wwu-mark {
-  font-size: 2.2rem;
+  font-size: 2rem;
   line-height: 1;
 }
 .wwu-logo span {
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   letter-spacing: -.01em;
 }
+/* Make sure the button floats on TOP of the dome's arc */
+.wwu-top .btn { position: relative; z-index: 3; }
 
 /* ============================================================
    RESPONSIVE TUNING for the new sections
