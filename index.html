@@ -421,7 +421,7 @@
             <span class="deco-arrow deco-arrow-yellow2">&#8601;</span>
           </span>
         </div>
-        <a href="#contact" class="btn btn-white btn-large">Get in touch</a>
+        <a href="#contact" class="btn btn-white btn-large btn-magnet">Get in touch</a>
       </div>
       <div class="wwu-dome" aria-hidden="true">
         <div class="wwu-logo">
@@ -549,7 +549,7 @@
     }
 
     // Generic scroll reveal — adds .in-view when an element enters
-    // the viewport. Works for both .reveal and .reveal-stagger.
+    // the viewport. Works for .reveal, .reveal-stagger, and .split-text.
     if ('IntersectionObserver' in window) {
       const revealObserver = new IntersectionObserver((entries) => {
         entries.forEach((e) => {
@@ -559,9 +559,13 @@
           }
         });
       }, { rootMargin: '0px 0px -10% 0px', threshold: 0.05 });
-      document.querySelectorAll('.reveal, .reveal-stagger').forEach((el) => revealObserver.observe(el));
+      document
+        .querySelectorAll('.reveal, .reveal-stagger, .split-text')
+        .forEach((el) => revealObserver.observe(el));
     } else {
-      document.querySelectorAll('.reveal, .reveal-stagger').forEach((el) => el.classList.add('in-view'));
+      document
+        .querySelectorAll('.reveal, .reveal-stagger, .split-text')
+        .forEach((el) => el.classList.add('in-view'));
     }
 
     // Header scroll state — tiny solid shadow once scrolled past hero
@@ -619,6 +623,69 @@
         btn.style.transform = 'translate(' + (x / r.width * strength) + 'px, ' + (y / r.height * strength) + 'px)';
       });
       btn.addEventListener('mouseleave', () => { btn.style.transform = ''; });
+    });
+
+    // Cursor-reactive pills — the hero pills gently tilt and
+    // offset based on mouse position. Subtle, under 3deg max.
+    const hero = document.querySelector('.hero');
+    const pills = document.querySelectorAll('.hero .pill');
+    if (hero && pills.length && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      hero.addEventListener('mousemove', (e) => {
+        const r = hero.getBoundingClientRect();
+        const nx = (e.clientX - r.left) / r.width  - 0.5;
+        const ny = (e.clientY - r.top)  / r.height - 0.5;
+        pills.forEach((p, i) => {
+          const factor = ((i % 3) + 1) * 2.2;
+          p.style.setProperty('--pill-tx', (nx * factor).toFixed(2) + 'px');
+          p.style.setProperty('--pill-ty', (ny * factor).toFixed(2) + 'px');
+          p.style.setProperty('--pill-rot', (nx * (1 + (i % 2)) * 1.5).toFixed(2) + 'deg');
+        });
+      });
+      hero.addEventListener('mouseleave', () => {
+        pills.forEach((p) => {
+          p.style.setProperty('--pill-tx', '0px');
+          p.style.setProperty('--pill-ty', '0px');
+          p.style.setProperty('--pill-rot', '0deg');
+        });
+      });
+    }
+
+    // Scroll-velocity marquee — nudges the track in the direction you scroll.
+    const marquee = document.querySelector('.marquee');
+    if (marquee && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      let lastY = window.scrollY;
+      let velocity = 0;
+      let raf;
+      const tick = () => {
+        velocity *= 0.9;
+        marquee.style.setProperty('--mq-boost', velocity.toFixed(2));
+        if (Math.abs(velocity) > 0.05) raf = requestAnimationFrame(tick);
+        else raf = null;
+      };
+      window.addEventListener('scroll', () => {
+        const dy = window.scrollY - lastY;
+        lastY = window.scrollY;
+        velocity = Math.max(-6, Math.min(6, velocity + dy * 0.15));
+        if (!raf) raf = requestAnimationFrame(tick);
+      }, { passive: true });
+    }
+
+    // Split any .split-text into individual word spans so CSS can
+    // stagger them in on reveal.
+    document.querySelectorAll('.split-text').forEach((el) => {
+      const original = el.textContent.trim();
+      el.textContent = '';
+      original.split(/\s+/).forEach((w, i) => {
+        const outer = document.createElement('span');
+        outer.className = 'word-wrap';
+        const inner = document.createElement('span');
+        inner.className = 'word-inner';
+        inner.textContent = w;
+        inner.style.transitionDelay = (i * 0.07) + 's';
+        outer.appendChild(inner);
+        el.appendChild(outer);
+        el.appendChild(document.createTextNode(' '));
+      });
     });
 
     // Scroll-driven parallax on magic-collage tiles.

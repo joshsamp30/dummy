@@ -595,6 +595,15 @@ h1, h2, h3, h4 {
   background-size: cover;
   background-position: center;
   position: relative;
+  /* Cursor-reactive offset driven by JS */
+  --pill-tx: 0px;
+  --pill-ty: 0px;
+  --pill-rot: 0deg;
+  transition:
+    translate .6s var(--ease-out),
+    rotate .6s var(--ease-out);
+  translate: var(--pill-tx) var(--pill-ty);
+  rotate: var(--pill-rot);
 }
 .pill::after {
   position: absolute;
@@ -984,6 +993,12 @@ h1, h2, h3, h4 {
   padding: 1.25rem 0;
   background: #050505;
 }
+.marquee {
+  /* Boost variable is set by JS on the parent based on scroll velocity;
+     propagates down to the track via translate: (individual property
+     that composes with the keyframe animation's transform). */
+  --mq-boost: 0;
+}
 .marquee-track {
   display: flex;
   gap: 2.5rem;
@@ -993,6 +1008,9 @@ h1, h2, h3, h4 {
   font-size: 1.4rem;
   letter-spacing: .1em;
   color: #fff;
+  translate: calc(var(--mq-boost) * -8px) 0;
+  transition: translate .25s linear;
+  will-change: transform, translate;
 }
 .marquee-track span:nth-child(even) { color: var(--muted); font-size: .9rem; }
 @keyframes scroll {
@@ -1195,6 +1213,32 @@ h1, h2, h3, h4 {
 .site-header.scrolled { padding-block: .85rem; }
 .site-header.scrolled .main-nav ul {
   box-shadow: 0 10px 30px -10px rgba(0,0,0,.5);
+}
+
+/* ============================================================
+   SPLIT TEXT — word-by-word reveal for section headlines
+   ============================================================ */
+.split-text .word-wrap {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  line-height: 1.05;
+}
+.split-text .word-inner {
+  display: inline-block;
+  transform: translateY(110%) rotate(4deg);
+  opacity: 0;
+  transition:
+    transform 1s var(--ease-out),
+    opacity .8s var(--ease-out);
+}
+.split-text.in-view .word-inner,
+.in-view .split-text .word-inner {
+  transform: translateY(0) rotate(0);
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .split-text .word-inner { transform: none; opacity: 1; }
 }
 
 /* ============================================================
