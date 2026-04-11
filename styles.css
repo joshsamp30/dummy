@@ -957,11 +957,11 @@ h1, h2, h3, h4 {
 .chat-bubble::before {
   content: "";
   position: absolute;
-  inset: -6px;
+  inset: -4px;
   border-radius: 50%;
-  border: 2px solid var(--pink);
+  border: 1px solid var(--pink);
   opacity: 0;
-  animation: chatPing 2.4s ease-out infinite;
+  animation: chatPing 5s ease-out infinite;
 }
 .chat-bubble:hover {
   transform: scale(1.08);
@@ -1196,6 +1196,61 @@ h1, h2, h3, h4 {
 .site-header.scrolled .main-nav ul {
   box-shadow: 0 10px 30px -10px rgba(0,0,0,.5);
 }
+
+/* ============================================================
+   FILM GRAIN — fixed overlay across whole viewport
+   ============================================================ */
+.grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 55;
+  opacity: .06;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+@media (prefers-reduced-motion: reduce) { .grain { opacity: .04; } }
+
+/* ============================================================
+   SECTION ACCENT COLOURS — each section gets a subtle coloured
+   corner glow + tints its counter + accents its green primitives
+   ============================================================ */
+[data-accent]::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 55vw;
+  max-width: 900px;
+  height: 55vw;
+  max-height: 700px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: .35;
+  background: radial-gradient(circle at 80% 20%, var(--accent-hue, transparent), transparent 55%);
+  filter: blur(20px);
+}
+[data-accent="green"] { --accent-hue: rgba(155,255,74,.35); }
+[data-accent="pink"]  { --accent-hue: rgba(255,77,139,.35); }
+[data-accent="blue"]  { --accent-hue: rgba(98,208,255,.32); }
+[data-accent="amber"] { --accent-hue: rgba(255,176,32,.30); }
+[data-accent="none"]  { --accent-hue: transparent; }
+
+/* Tint the section counter number to match */
+[data-accent="green"] .section-counter span { color: #e8ffcc; }
+[data-accent="pink"]  .section-counter span { color: #ffd1e0; }
+[data-accent="blue"]  .section-counter span { color: #d1eeff; }
+[data-accent="amber"] .section-counter span { color: #ffe5b8; }
+[data-accent="green"] .section-counter small { color: var(--green); }
+[data-accent="green"] .section-counter small::before { background: var(--green); }
+[data-accent="pink"]  .section-counter small { color: var(--pink); }
+[data-accent="pink"]  .section-counter small::before { background: var(--pink); }
+[data-accent="blue"]  .section-counter small { color: var(--blue); }
+[data-accent="blue"]  .section-counter small::before { background: var(--blue); }
+
+/* Children of sections sit above the accent glow */
+[data-accent] > * { position: relative; z-index: 2; }
+[data-accent].magic > .container { z-index: 2; }
 
 /* ============================================================
    SECTION COUNTER — muted index badge at top-right of each section
