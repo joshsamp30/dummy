@@ -300,12 +300,12 @@
           <p>Our workshop is a hive of activity where we embrace challenges and help bring your ideas to life.</p>
           <a href="#" class="btn btn-outline-green">Explore the workshop</a>
         </div>
-        <div class="magic-collage reveal-stagger" aria-hidden="true">
-          <div class="m-tile m-1"></div>
-          <div class="m-tile m-2"></div>
-          <div class="m-tile m-3"></div>
-          <div class="m-tile m-4"></div>
-          <div class="m-tile m-5"></div>
+        <div class="magic-collage reveal" aria-hidden="true">
+          <div class="m-tile m-1" data-parallax="0.12"></div>
+          <div class="m-tile m-2" data-parallax="-0.18"></div>
+          <div class="m-tile m-3" data-parallax="0.08"></div>
+          <div class="m-tile m-4" data-parallax="-0.14"></div>
+          <div class="m-tile m-5" data-parallax="0.1"></div>
         </div>
       </div>
     </section>
@@ -387,42 +387,65 @@
 
   <!-- =================== FOOTER =================== -->
   <footer class="site-footer">
-    <div class="container footer-grid">
-      <div>
+    <div class="container footer-top">
+      <div class="footer-brand">
         <a href="#" class="logo">
           <span>The</span><span>Sign</span><span>Group</span>
+          <sup>&trade;</sup>
         </a>
-        <p class="muted">Signage and lighting for the trade. Manufactured in the UK.</p>
+        <p class="footer-tagline">Signage &amp; lighting for the trade, manufactured with care in the UK since 2001.</p>
+        <div class="footer-accreds" aria-label="Accreditations">
+          <span>ISO 9001</span>
+          <span>CHAS</span>
+          <span>SafeContractor</span>
+          <span>Made in UK</span>
+        </div>
       </div>
-      <div>
+
+      <div class="footer-col">
         <h4>Products</h4>
         <ul>
+          <li><a href="#products">Neonplus<sup>&reg;</sup></a></li>
+          <li><a href="#products">Neon flex</a></li>
           <li><a href="#products">Built-up letters</a></li>
-          <li><a href="#products">Neon</a></li>
           <li><a href="#products">Light boxes</a></li>
           <li><a href="#products">Halo lit</a></li>
         </ul>
       </div>
-      <div>
+
+      <div class="footer-col">
         <h4>Company</h4>
         <ul>
           <li><a href="#company">About</a></li>
-          <li><a href="#inspiration">Inspiration</a></li>
-          <li><a href="#net-zero">Net-Zero</a></li>
-          <li><a href="#contact">Contact</a></li>
+          <li><a href="#products">Inspiration</a></li>
+          <li><a href="#contact">Brochure</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Net-Zero</a></li>
         </ul>
       </div>
-      <div>
-        <h4>Contact</h4>
-        <ul class="muted">
-          <li>+44 (0)1234 567 890</li>
-          <li>hello@example.com</li>
-          <li>Anytown, UK</li>
+
+      <div class="footer-col footer-contact">
+        <h4>Get in touch</h4>
+        <ul>
+          <li><a href="tel:+441234567890">+44 (0)1234 567 890</a></li>
+          <li><a href="mailto:hello@example.com">hello@example.com</a></li>
+          <li>Unit 1, Example Trading Estate,<br/>Anytown, AB1 2CD</li>
         </ul>
+        <div class="footer-socials">
+          <a href="#" aria-label="Instagram">IG</a>
+          <a href="#" aria-label="LinkedIn">LI</a>
+          <a href="#" aria-label="Pinterest">PN</a>
+        </div>
       </div>
     </div>
+
     <div class="container footer-bottom">
       <p class="muted">&copy; <span id="year"></span> The Sign Group. All rights reserved.</p>
+      <ul class="footer-legal">
+        <li><a href="#">Privacy</a></li>
+        <li><a href="#">Terms</a></li>
+        <li><a href="#">Cookies</a></li>
+      </ul>
     </div>
   </footer>
 
@@ -550,6 +573,30 @@
       });
       btn.addEventListener('mouseleave', () => { btn.style.transform = ''; });
     });
+
+    // Scroll-driven parallax on magic-collage tiles.
+    // We set a CSS custom property --py that the tile's transform uses,
+    // so it doesn't collide with other transforms.
+    const parallaxEls = document.querySelectorAll('[data-parallax]');
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (parallaxEls.length && !reduceMotion) {
+      let ticking = false;
+      const updateParallax = () => {
+        parallaxEls.forEach((el) => {
+          const speed = parseFloat(el.dataset.parallax) || 0;
+          const rect = el.getBoundingClientRect();
+          const centerOffset = rect.top + rect.height / 2 - window.innerHeight / 2;
+          el.style.setProperty('--py', (centerOffset * speed).toFixed(1) + 'px');
+        });
+        ticking = false;
+      };
+      const requestParallax = () => {
+        if (!ticking) { requestAnimationFrame(updateParallax); ticking = true; }
+      };
+      updateParallax();
+      window.addEventListener('scroll', requestParallax, { passive: true });
+      window.addEventListener('resize', requestParallax);
+    }
   </script>
 </body>
 </html>
