@@ -367,6 +367,8 @@ h1, h2, h3, h4 {
    scrolls up. */
 .marquee,
 .section,
+.trust-strip,
+.curve-divider,
 .site-footer { position: relative; z-index: 2; }
 .hero::before {
   content: "";
