@@ -18,6 +18,12 @@
   <!-- Scroll progress bar -->
   <div class="scroll-progress" aria-hidden="true"><span></span></div>
 
+  <!-- Floating sticky CTA — hidden until scrolled past hero -->
+  <a href="#contact" class="sticky-cta" aria-label="Start a project">
+    <span class="sticky-cta-label">Start a project</span>
+    <span class="sticky-cta-arrow" aria-hidden="true">&#8599;</span>
+  </a>
+
   <header class="site-header">
     <a href="#" class="logo" aria-label="The Sign Group">
       <span>The</span>
@@ -108,6 +114,51 @@
       </div>
     </section>
 
+    <!-- =================== TRUST STRIP =================== -->
+    <section class="trust-strip">
+      <div class="container">
+        <div class="trust-head reveal">
+          <p class="eyebrow-line"><span></span> Trusted by the trade since 2001</p>
+          <p class="trust-lede">From independent sign-makers to national retailers &mdash; over two decades of signs delivered on brief, on time, on budget.</p>
+        </div>
+        <ul class="stats reveal-stagger">
+          <li>
+            <strong data-count="25">25</strong><em>+</em>
+            <span>Years manufacturing</span>
+          </li>
+          <li>
+            <strong data-count="4000">4,000</strong><em>+</em>
+            <span>Projects delivered</span>
+          </li>
+          <li>
+            <strong data-count="98">98</strong><em>%</em>
+            <span>Client retention</span>
+          </li>
+          <li>
+            <strong>UK</strong><em>-wide</em>
+            <span>Install network</span>
+          </li>
+        </ul>
+        <div class="client-logos reveal">
+          <span class="cl-label">As featured in the projects of</span>
+          <ul>
+            <li>BBC</li>
+            <li>Selfridges</li>
+            <li>Nike</li>
+            <li>Gymshark</li>
+            <li>Tesco</li>
+            <li>NHS</li>
+            <li>JD Sports</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- curve: dark -> light -->
+    <div class="curve-divider curve-dark-to-light" aria-hidden="true">
+      <svg viewBox="0 0 1440 80" preserveAspectRatio="none"><path d="M0,80 C360,0 1080,0 1440,80 L1440,0 L0,0 Z"/></svg>
+    </div>
+
     <!-- =================== PRODUCTS CAROUSEL =================== -->
     <section id="products" class="section products-light light-bg">
       <!-- Rotating warranty badge -->
@@ -179,6 +230,11 @@
       </div>
     </section>
 
+    <!-- curve: light -> dark -->
+    <div class="curve-divider curve-light-to-dark" aria-hidden="true">
+      <svg viewBox="0 0 1440 80" preserveAspectRatio="none"><path d="M0,0 C360,80 1080,80 1440,0 L1440,80 L0,80 Z"/></svg>
+    </div>
+
     <!-- =================== SECTION: NEEDS COVERED =================== -->
     <section id="company" class="section signage-covered">
       <div class="container sc-grid">
@@ -202,6 +258,11 @@
       </div>
     </section>
 
+    <!-- curve: dark -> light -->
+    <div class="curve-divider curve-dark-to-light" aria-hidden="true">
+      <svg viewBox="0 0 1440 80" preserveAspectRatio="none"><path d="M0,80 C360,0 1080,0 1440,80 L1440,0 L0,0 Z"/></svg>
+    </div>
+
     <!-- =================== SECTION: DELIVERING =================== -->
     <section class="section delivering light-bg">
       <div class="deliver-grid">
@@ -218,6 +279,11 @@
         </div>
       </div>
     </section>
+
+    <!-- curve: light -> dark -->
+    <div class="curve-divider curve-light-to-dark" aria-hidden="true">
+      <svg viewBox="0 0 1440 80" preserveAspectRatio="none"><path d="M0,0 C360,80 1080,80 1440,0 L1440,80 L0,80 Z"/></svg>
+    </div>
 
     <!-- =================== SECTION: MAGIC =================== -->
     <section class="section magic">
@@ -429,12 +495,48 @@
     }
 
     // Header scroll state — tiny solid shadow once scrolled past hero
+    const stickyCta = document.querySelector('.sticky-cta');
+    const brochureSection = document.getElementById('contact');
     const setHeaderState = () => {
       if (window.scrollY > 60) header.classList.add('scrolled');
       else header.classList.remove('scrolled');
+
+      // Show sticky CTA after 70% of hero height, hide as form approaches
+      if (stickyCta) {
+        const showAfter = window.innerHeight * 0.7;
+        const brochureTop = brochureSection ? brochureSection.getBoundingClientRect().top : 99999;
+        const hide = brochureTop < window.innerHeight * 0.8;
+        const show = window.scrollY > showAfter && !hide;
+        stickyCta.classList.toggle('visible', show);
+      }
     };
     setHeaderState();
     window.addEventListener('scroll', setHeaderState, { passive: true });
+    window.addEventListener('resize', setHeaderState);
+
+    // Animated count-up for trust-strip stats
+    if ('IntersectionObserver' in window) {
+      const counts = document.querySelectorAll('[data-count]');
+      const countObserver = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          const el = e.target;
+          const target = parseInt(el.dataset.count, 10);
+          const duration = 1400;
+          const start = performance.now();
+          const format = (n) => n.toLocaleString('en-GB');
+          const step = (now) => {
+            const p = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - p, 3);
+            el.textContent = format(Math.round(target * eased));
+            if (p < 1) requestAnimationFrame(step);
+          };
+          requestAnimationFrame(step);
+          countObserver.unobserve(el);
+        });
+      }, { threshold: 0.4 });
+      counts.forEach((el) => countObserver.observe(el));
+    }
 
     // Magnetic CTA micro-interaction — buttons with .btn-magnet
     // tilt slightly toward the cursor on hover.
