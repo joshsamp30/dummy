@@ -578,7 +578,8 @@ h1, h2, h3, h4 {
   .hero { padding: 6rem 1.25rem 4rem; }
   .hero-grid { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
   .hero-counter { grid-column: 1; justify-self: start; }
-  .hero-side { grid-column: 1; justify-self: start; align-self: end; text-align: left; }
+  .hero-counter-label { display: none; }
+  .hero-side { grid-column: 1; justify-self: start; align-self: end; text-align: left; max-width: none; }
   .hero-side .hero-tagline { border-left: none; padding-left: 0; }
   .hero-ctas { justify-content: flex-start; }
   .hero-headline { text-align: left; font-size: clamp(2.2rem, 12vw, 5rem); }
@@ -778,30 +779,22 @@ h1, h2, h3, h4 {
 .pill-letter-a { animation-delay: 1.35s; }
 .pill-wings    { animation-delay: 1.45s; }
 
-/* 2. Idle float — each pill bobs on its own rhythm after entrance */
-@keyframes floatA { 0%,100% { translate: 0 0; } 50% { translate: 0 -.06em; } }
-@keyframes floatB { 0%,100% { translate: 0 0; } 50% { translate: 0  .05em; } }
-@keyframes floatC { 0%,100% { translate: 0 0; } 50% { translate: 0 -.08em; } }
+/* 2. Idle float — removed so cursor-reactive pills can drive
+      the translate: property without being overridden by a
+      CSS animation. Cursor interaction is the nicer touch. */
 
-.hero-headline .pill { will-change: transform, translate; }
+.hero-headline .pill { will-change: translate, rotate, transform; }
 .pill-starman,
 .pill-bubble,
 .pill-bolt,
-.pill-wings {
-  animation: pillPop .7s cubic-bezier(.4,1.6,.5,1) forwards,
-             floatA 5.5s ease-in-out infinite 1.8s;
-}
+.pill-wings,
 .pill-asterisk,
 .pill-dots,
-.pill-letter-a {
-  animation: pillPop .7s cubic-bezier(.4,1.6,.5,1) forwards,
-             floatB 6.2s ease-in-out infinite 2s;
-}
+.pill-letter-a,
 .pill-hello,
 .pill-neon-red,
 .pill-squiggle {
-  animation: pillPop .7s cubic-bezier(.4,1.6,.5,1) forwards,
-             floatC 4.8s ease-in-out infinite 2.2s;
+  animation: pillPop .7s cubic-bezier(.4,1.6,.5,1) forwards;
 }
 
 /* 3. Neon flicker — applied to the glowing text inside neon pills.
@@ -864,7 +857,6 @@ h1, h2, h3, h4 {
 }
 .pill-bolt {
   animation: pillPop .7s cubic-bezier(.4,1.6,.5,1) forwards,
-             floatA 5.5s ease-in-out infinite 1.8s,
              boltFlash 5s ease-in-out infinite 3s;
 }
 
@@ -1231,11 +1223,13 @@ h1, h2, h3, h4 {
   display: inline-block;
   overflow: hidden;
   vertical-align: top;
-  line-height: 1.05;
+  line-height: 1.1;
+  padding-bottom: .15em;         /* clear descenders */
+  margin-bottom: -.15em;         /* compensate so line-height is unchanged */
 }
 .split-text .word-inner {
   display: inline-block;
-  transform: translateY(110%) rotate(4deg);
+  transform: translateY(110%) rotate(3deg);
   opacity: 0;
   transition:
     transform 1s var(--ease-out),
@@ -1350,10 +1344,22 @@ h1, h2, h3, h4 {
   width: 14px; height: 1px;
   background: var(--muted);
 }
-.section-counter.dark span { color: var(--light-ink); }
+/* Dark variant (on light section backgrounds) — higher specificity
+   so it beats any data-accent colour tint */
+[data-accent] .section-counter.dark span,
+.section-counter.dark span { color: var(--light-ink) !important; }
+[data-accent] .section-counter.dark em,
+[data-accent] .section-counter.dark small,
 .section-counter.dark em,
-.section-counter.dark small { color: #6b6b74; }
-.section-counter.dark small::before { background: #6b6b74; }
+.section-counter.dark small { color: #6b6b74 !important; }
+.section-counter.dark small::before { background: #6b6b74 !important; }
+
+/* Products section: counter moves to top-LEFT so the warranty
+   badge (top-right, 160px) has room to breathe. */
+.products-light .section-counter {
+  right: auto;
+  left: 2rem;
+}
 
 @media (max-width: 720px) {
   .section-counter { top: 1.25rem; right: 1.25rem; }
