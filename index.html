@@ -52,6 +52,134 @@
     "aggregateRating": {"@type":"AggregateRating","ratingValue":"4.9","reviewCount":"612"}
   }
   </script>
+
+  <!-- sitewide-localbusiness-jsonld -->
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": [
+    "HVACBusiness",
+    "Plumber",
+    "Electrician"
+  ],
+  "@id": "https://ericsenergy.com/#business",
+  "name": "Eric Kjelshus Energy Heating and Cooling",
+  "alternateName": "Eric Kjelshus Energy",
+  "url": "https://ericsenergy.com/",
+  "logo": "https://ericsenergy.com/logo.png",
+  "image": "https://ericsenergy.com/og-image.jpg",
+  "telephone": "+1-816-537-5100",
+  "priceRange": "$$",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "25001 E Outer Belt Rd",
+    "addressLocality": "Greenwood",
+    "addressRegion": "MO",
+    "postalCode": "64034",
+    "addressCountry": "US"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 38.85,
+    "longitude": -94.32
+  },
+  "openingHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday"
+      ],
+      "opens": "07:00",
+      "closes": "19:00"
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": [
+        "Saturday",
+        "Sunday"
+      ],
+      "opens": "08:00",
+      "closes": "17:00"
+    }
+  ],
+  "sameAs": [
+    "https://www.facebook.com/erickjelshusenergyinc/",
+    "https://www.linkedin.com/company/eric-kjelshus-energy",
+    "https://twitter.com/ericsenergy",
+    "https://www.youtube.com/channel/UCfUkGZQ0zw7W-pVetb-fUHw",
+    "https://www.instagram.com/eric.kjelshusenergy/"
+  ],
+  "areaServed": [
+    "Kansas City, MO",
+    "Greenwood, MO",
+    "Lee's Summit, MO",
+    "Blue Springs, MO",
+    "Independence, MO",
+    "Raytown, MO",
+    "Grain Valley, MO",
+    "Belton, MO",
+    "Raymore, MO",
+    "Oak Grove, MO",
+    "Pleasant Hill, MO",
+    "Lone Jack, MO",
+    "Lake Lotawana, MO"
+  ],
+  "founder": {
+    "@type": "Person",
+    "name": "Eric Kjelshus"
+  },
+  "foundingDate": "1972",
+  "slogan": "Saving Energy One Building at a Time",
+  "knowsAbout": [
+    "HVAC",
+    "Heating",
+    "Air Conditioning",
+    "Plumbing",
+    "Electrical",
+    "Geothermal Heating and Cooling",
+    "Indoor Air Quality",
+    "Energy Audits",
+    "Furnace Repair",
+    "Heat Pump Installation",
+    "Tankless Water Heater Installation",
+    "Ductwork Repair",
+    "Smart Thermostat Installation"
+  ],
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.9",
+    "reviewCount": "612",
+    "bestRating": "5",
+    "worstRating": "1"
+  }
+}
+  </script>
+
+  <!-- website-searchaction-jsonld -->
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": "https://ericsenergy.com/#website",
+  "url": "https://ericsenergy.com/",
+  "name": "Eric Kjelshus Energy Heating and Cooling",
+  "publisher": {
+    "@id": "https://ericsenergy.com/#business"
+  },
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://ericsenergy.com/?s={search_term_string}"
+    },
+    "query-input": "required name=search_term_string"
+  }
+}
+  </script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
