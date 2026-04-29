@@ -1,17 +1,35 @@
-# Eric Kjelshus Energy — Website
+# Eric Kjelshus Energy — Full Website
 
-Premium static homepage for Eric Kjelshus Energy Heating &amp; Cooling
-(Greenwood, MO). Built from scratch in plain HTML / CSS / JS — no build
-step, no framework — designed for fast load, strong on-page SEO and
-easy editing.
+Multi-page static site for Eric Kjelshus Energy Heating &amp; Cooling
+(Greenwood, MO). Plain HTML / CSS / JS — no build step, no framework —
+designed for fast load, strong on-page SEO and easy editing.
 
-## Files
+## Sitemap (33 pages)
 
-- `index.html` — page structure, copy and JSON-LD structured data
-- `styles.css` — all styling
-- `script.js` — mobile nav, scrollspy, form placeholder, year stamp
-- `robots.txt` — crawler rules
-- `sitemap.xml` — sitemap for search engines
+**Top level**
+- `index.html` — homepage
+- `about.html` · `contact.html` · `faqs.html` · `financing.html`
+- `coupons.html` · `reviews.html` · `careers.html` · `blog.html`
+- `service-areas.html` · `privacy-policy.html` · `accessibility.html`
+
+**Services (8)**
+- `plumbing.html` · `air-conditioning.html` · `heating.html`
+- `geothermal.html` · `indoor-air-quality.html` · `electrical.html`
+- `commercial.html` · `energy-audits.html`
+
+**Service-area city pages (8)**
+- `service-area-greenwood.html` (HQ) · `service-area-lees-summit.html`
+- `service-area-blue-springs.html` · `service-area-kansas-city.html`
+- `service-area-belton.html` · `service-area-raymore.html`
+- `service-area-oak-grove.html` · `service-area-pleasant-hill.html`
+
+**Blog posts (6)**
+- `blog-heater-repair-signs.html` · `blog-tankless-water-heater.html`
+- `blog-frozen-pipes.html` · `blog-furnace-overheating.html`
+- `blog-ductwork-service.html` · `blog-smart-thermostat.html`
+
+**Supporting**
+- `styles.css` · `script.js` · `robots.txt` · `sitemap.xml` · `.nojekyll`
 
 ## Run locally
 
@@ -20,32 +38,40 @@ python3 -m http.server 8000
 # then open http://localhost:8000
 ```
 
-## SEO already wired up
+## SEO baked in (every page)
 
 - Semantic HTML5 (`header`, `nav`, `main`, `section`, `article`, `footer`)
-- Title + meta description tuned for "HVAC Kansas City / Greenwood MO"
-- Open Graph + Twitter Card tags
-- Canonical URL + robots meta
-- JSON-LD `HVACBusiness` (NAP, hours, geo, rating, services, area served)
-- JSON-LD `FAQPage` for FAQ rich result eligibility
-- Inline SVG favicon (no broken icon)
-- Skip-to-content link, ARIA labels, alt-equivalent SVG handling
-- `tel:` links throughout for one-tap mobile calls
-- `robots.txt` + `sitemap.xml`
+- Unique `<title>`, meta description and canonical URL per page
+- Open Graph + Twitter Card on key pages
+- JSON-LD: `HVACBusiness`, `Service`, `Electrician`, `BlogPosting`,
+  `FAQPage`, `AboutPage`, `ContactPage` as appropriate
+- Inline-SVG favicon (no extra request, no broken icon)
+- Skip-to-content link, ARIA labels, descriptive image alt text
+- `tel:` links throughout
+- `robots.txt` + comprehensive `sitemap.xml`
+- `.nojekyll` for clean GitHub Pages serve
+
+## Image placeholders
+
+To avoid broken images, the site uses CSS-rendered placeholders with
+visible labels (e.g. "Plumbing technician on-site"). Swap these with
+real photography by replacing the relevant background-image rules
+in `styles.css` (search `.img-placeholder`, `.hero-photo`, `.about-photo`).
 
 ## Customising
 
 - **Brand colours:** edit `:root` in `styles.css` (`--blue`, `--red`, `--navy`, `--gold`).
-- **Phone / address / hours:** search `816-537-5100`, `25001 E Outer Belt Rd`, and the `openingHoursSpecification` block in `index.html`.
-- **Hero photo:** `.hero-photo` currently uses a CSS-rendered HVAC illustration. Swap in a real photo by replacing the `background` and `background-image` rules in `styles.css` (e.g. `background-image: url('images/technician.jpg')`).
-- **About photo:** same pattern on `.about-photo`.
-- **Form:** wire `<form class="contact-form">` to your backend, Formspree or Netlify Forms. Current handler in `script.js` is a placeholder.
-- **Sitemap / canonical / OG image:** replace `https://ericsenergy.com/` with the real production domain everywhere it appears.
+- **Phone / address / hours:** search `816-537-5100` and `25001 E Outer Belt Rd`.
+- **Form:** wire `<form class="contact-form">` to your backend, Formspree
+  or Netlify Forms. Current handler in `script.js` is a placeholder.
+- **Production domain:** replace `https://ericsenergy.com/` in canonical
+  links, sitemap, OG URLs.
 
 ## Recommended next steps
 
-1. Drop in real photography (hero, technician, vans, before/afters) at the marked locations.
-2. Add Google Tag Manager + GA4 in `<head>` for analytics.
+1. Drop in real photography (hero, technician, vans, before/afters).
+2. Add Google Tag Manager + GA4 to `<head>` for analytics.
 3. Submit `sitemap.xml` to Google Search Console and Bing Webmaster Tools.
-4. Verify the `HVACBusiness` schema with Google's Rich Results Test.
-5. Build out individual service pages (`/services/geothermal`, `/services/heating`, etc.) and city landing pages for local SEO (e.g. `/hvac-blue-springs-mo`).
+4. Verify `HVACBusiness` schema with Google's Rich Results Test.
+5. Wire up the contact form to a real backend (Formspree, Netlify Forms,
+   or your CRM).
