@@ -28,7 +28,7 @@
     <img class="logo" src="assets/logo_navy.png" alt="Local Howl">
     <p class="eyebrow">Meanwhile, somewhere in your neighborhood...</p>
     <h1>Map Pack <span>Showdown.</span></h1>
-    <p class="lede">Fix broken sites. Win reviews. Publish new pages. Take the top 3.</p>
+    <p class="lede">An open town. One wolf. Fix sites, win reviews, publish pages and take the top 3.</p>
     <form id="gateForm" novalidate>
       <label>Your name<input id="fName" name="name" autocomplete="given-name" maxlength="16" required placeholder="Alpha"></label>
       <label>Email<input id="fEmail" name="email" type="email" autocomplete="email" inputmode="email" required placeholder="you@business.com"></label>
@@ -42,16 +42,16 @@
 <section id="menu" class="screen" hidden>
   <div class="card">
     <img class="logo" src="assets/logo_navy.png" alt="Local Howl">
-    <p class="eyebrow">How it works</p>
-    <h1>Put your pack <span>on the map.</span></h1>
+    <p class="eyebrow">Your first shift at Local Howl</p>
+    <h1>Put this town <span>on the map.</span></h1>
     <ol class="how">
-      <li><b>Get more reviews.</b> Shoot stars at storefronts to rank them for your pack.</li>
-      <li><b>Fix site issues.</b> 404s and slow pages break a storefront. Shoot the red warning to fix it.</li>
-      <li><b>Publish new pages.</b> Grab the floating pages for leads and a boost.</li>
+      <li><b>Take jobs.</b> Roam the town on foot or in the van. Drive into a beam to start.</li>
+      <li><b>Fix sites. Get reviews. Publish pages.</b> Every job moves that client up the rankings.</li>
+      <li><b>Fill the Map Pack.</b> Top 3 clients pay leads every second. Dodge the spam bots.</li>
     </ol>
-    <p class="keys desk">Top 3 = Map Pack = triple leads. WASD, mouse, click. Space howls.</p>
-    <p class="keys touch">Top 3 = Map Pack = triple leads. Left thumb moves. Right thumb shoots.</p>
-    <button id="btnPlay" class="btn">Play now</button>
+    <p class="keys desk">WASD or drag to move. Space for the van. Q to howl. Aiming is automatic.</p>
+    <p class="keys touch">Drag anywhere to move. Two buttons. Aiming is automatic.</p>
+    <button id="btnPlay" class="btn">Start your shift</button>
     <button id="btnShare" class="btn ghost">Copy invite link</button>
     <p id="roomInfo" class="fine"></p>
   </div>
@@ -59,33 +59,37 @@
 
 <div id="hud" hidden>
   <div id="top">
-    <div class="score t0"><b id="sc0">0</b><span>Night Pack</span></div>
-    <div id="clock">2:30</div>
-    <div class="score t1"><b id="sc1">0</b><span>Dawn Pack</span></div>
+    <div class="stat"><b id="leads">0</b><span>Leads</span></div>
+    <div id="clock">3:00</div>
+    <div class="stat"><b id="heat"></b><span>Spam heat</span></div>
   </div>
+  <div id="job"></div>
   <div id="pack">
-    <h2>near me <i>Map Pack</i></h2>
+    <h2><span>Clients</span><i id="packHead"></i></h2>
     <ol id="packList"></ol>
+  </div>
+  <div id="side">
+    <canvas id="map" width="148" height="148"></canvas>
+    <ol id="board"></ol>
   </div>
   <div id="feed"></div>
   <div id="banner"></div>
+  <div id="brief"></div>
   <div id="fact"><b>Local SEO tip</b><span id="factText"></span></div>
-  <div id="status">
-    <div id="hp"></div>
-    <div id="buff"></div>
-  </div>
+  <button id="btnAct" aria-label="Van"><span id="actLabel">DRIVE</span></button>
   <button id="btnHowl" aria-label="Howl"><span>HOWL</span></button>
   <button id="btnInvite" aria-label="Copy invite link">Invite</button>
   <div id="stickL" class="stick"><i></i></div>
-  <div id="stickR" class="stick"><i></i></div>
   <div id="flash"></div>
 </div>
 
 <section id="results" class="screen" hidden>
   <div class="card">
+    <p class="eyebrow">Shift report</p>
     <h1 id="resTitle"></h1>
     <p id="resScore" class="lede"></p>
     <ul id="resStats" class="stats"></ul>
+    <ol id="resBoard" class="board"></ol>
     <h3>Less talk. More proof.</h3>
     <ul class="learn">
       <li><b>Technical fixes.</b> A broken, slow or blocked page cannot earn its ranking.</li>
@@ -93,7 +97,7 @@
       <li><b>New pages.</b> Each service and each area needs its own page to rank.</li>
     </ul>
     <a id="cta" class="btn" target="_blank" rel="noopener">Get on the real Map Pack</a>
-    <p id="resNext" class="fine"></p>
+    <button id="btnAgain" class="btn ghost">Run another shift</button>
   </div>
 </section>
 

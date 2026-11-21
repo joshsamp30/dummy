@@ -1,51 +1,60 @@
-// Map Pack Showdown: simulation, netcode and rendering.
-// Model: each client owns its own wolf and its own shots. One client is host (earliest joiner)
-// and owns shared state: listings, site issues, page pickups, bots, the clock and the score.
+// Local Howl: Map Pack Showdown. An open-town shift, built around one player.
+// Every client runs its own shift. The network only shares where players are and their lead count.
 import * as THREE from '../vendor/three.module.min.js';
-import { CONFIG, TEAMS, STORES, PICKUPS, PAGE_LEADS, ISSUES, FACTS, BOT_NAMES } from './config.js';
-import { buildWorld, makeWolf, makeStar, makeHowlRing, colliders, BOUNDS } from './world.js';
+import { CONFIG, COLORS, JOBS, ISSUES, FACTS } from './config.js';
+import { buildWorld, makeWolf, makeVan, makeCar, makeBug, makeDrone, makeBeacon, makePage, makeArrow, makeRing, makeStar, colliders, BOUNDS, ROADS } from './world.js';
 
-const SPEED = 11, BOT_SPEED = 8.5, RADIUS = 0.8;
-const FIRE_MS = 240, BOT_FIRE_MS = 750, STAR_SPEED = 38, STAR_LIFE = 1.25;
-const HIT_POW = 3, OWN_AT = 30, HOWL_R = 13, HOWL_CD = 12000, HOWL_BOOST = 15;
-const MAX_HP = 3, RESPAWN_MS = 3000, SPAM_HP = 6;
+const FOOT = 10.5, VAN_MAX = 27, R_FOOT = 0.8, R_VAN = 2.0;
+const ZONE = 5.5, RANGE = 13, HOWL_R = 14, HOWL_CD = 10000;
 const now = () => performance.now();
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const dist = (ax, az, bx, bz) => Math.hypot(ax - bx, az - bz);
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const rand = (a, b) => a + Math.random() * (b - a);
 
-export const ownerOf = (v) => (v >= OWN_AT ? 0 : v <= -OWN_AT ? 1 : -1);
-export function mapPack(vals) {
-  return vals.map((v, i) => ({ i, v, owner: ownerOf(v) })).filter((s) => s.owner >= 0)
-    .sort((a, b) => Math.abs(b.v) - Math.abs(a.v) || a.i - b.i).slice(0, 3);
-}
-
-function collide(e) {
+function collide(e, R) {
+  let hit = false;
   for (const c of colliders) {
     if (c.r) {
-      const d = dist(e.x, e.z, c.x, c.z), min = c.r + RADIUS;
-      if (d < min && d > 1e-4) { e.x = c.x + ((e.x - c.x) / d) * min; e.z = c.z + ((e.z - c.z) / d) * min; }
+      const d = dist(e.x, e.z, c.x, c.z), min = c.r + R;
+      if (d < min && d > 1e-4) { e.x = c.x + ((e.x - c.x) / d) * min; e.z = c.z + ((e.z - c.z) / d) * min; hit = true; }
     } else {
+      if (Math.abs(e.x - c.x) > c.hw + R || Math.abs(e.z - c.z) > c.hd + R) continue;
       const nx = clamp(e.x, c.x - c.hw, c.x + c.hw), nz = clamp(e.z, c.z - c.hd, c.z + c.hd);
       const dx = e.x - nx, dz = e.z - nz, d = Math.hypot(dx, dz);
-      if (d < RADIUS) {
-        if (d > 1e-4) { e.x = nx + (dx / d) * RADIUS; e.z = nz + (dz / d) * RADIUS; }
-        else if (c.hw - Math.abs(e.x - c.x) < c.hd - Math.abs(e.z - c.z)) e.x = c.x + Math.sign(e.x - c.x || 1) * (c.hw + RADIUS);
-        else e.z = c.z + Math.sign(e.z - c.z || 1) * (c.hd + RADIUS);
+      if (d < R) {
+        hit = true;
+        if (d > 1e-4) { e.x = nx + (dx / d) * R; e.z = nz + (dz / d) * R; }
+        else if (c.hw - Math.abs(e.x - c.x) < c.hd - Math.abs(e.z - c.z)) e.x = c.x + Math.sign(e.x - c.x || 1) * (c.hw + R);
+        else e.z = c.z + Math.sign(e.z - c.z || 1) * (c.hd + R);
       }
     }
   }
-  e.x = clamp(e.x, -BOUNDS.x, BOUNDS.x); e.z = clamp(e.z, -BOUNDS.z, BOUNDS.z);
+  if (Math.abs(e.x) > BOUNDS) { e.x = clamp(e.x, -BOUNDS, BOUNDS); hit = true; }
+  if (Math.abs(e.z) > BOUNDS) { e.z = clamp(e.z, -BOUNDS, BOUNDS); hit = true; }
+  return hit;
 }
 
-function pointHit(x, z) {
-  if (Math.abs(x) > BOUNDS.x + 2 || Math.abs(z) > BOUNDS.z + 2) return { wall: true };
-  for (const c of colliders) {
-    if (c.r) { if (dist(x, z, c.x, c.z) < c.r) return c; }
-    else if (Math.abs(x - c.x) < c.hw + 0.3 && Math.abs(z - c.z) < c.hd + 0.3) return c;
+// A random point on the street grid. lateral 0 is the centre line, about 7.5 is the pavement.
+function roadPoint(nx, nz, minD, maxD, lateral = 4) {
+  for (let i = 0; i < 60; i++) {
+    const r = pick(ROADS), t = rand(-92, 92), off = rand(-lateral, lateral) || 0;
+    const p = Math.random() < 0.5 ? { x: t, z: r + off } : { x: r + off, z: t };
+    const d = dist(p.x, p.z, nx, nz);
+    if (d >= minD && d <= maxD) return p;
   }
-  return null;
+  return { x: clamp(nx + minD, -90, 90), z: pick(ROADS) };
 }
+const sidewalkPoint = (nx, nz, minD, maxD) => {
+  for (let i = 0; i < 60; i++) {
+    const r = pick(ROADS), t = rand(-92, 92), off = pick([-7.6, 7.6]);
+    if (ROADS.some((o) => Math.abs(t - o) < 9)) continue;
+    const p = Math.random() < 0.5 ? { x: t, z: r + off } : { x: r + off, z: t };
+    const d = dist(p.x, p.z, nx, nz);
+    if (d >= minD && d <= maxD) return p;
+  }
+  return roadPoint(nx, nz, minD, maxD);
+};
 
 export class Game {
   constructor(canvas, net, me, ui, input, sfx) {
@@ -53,445 +62,379 @@ export class Game {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, matchMedia('(pointer:coarse)').matches ? 1.5 : 2));
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(50, 1, 0.5, 400);
+    this.camera = new THREE.PerspectiveCamera(50, 1, 0.5, 500);
     this.world = buildWorld(this.scene);
-    this.wolves = new Map(); this.stars = []; this.fx = [];
-    this.roster = []; this.isHost = false; this.playing = false;
-    this.G = { ph: 'wait', tl: 0, v: STORES.map(() => 0), spam: null, pads: [0, 0, 0, 0], sc: [0, 0], round: 0 };
-    this.H = null; // host-only timers
-    this.my = null; this.stats = this.freshStats(); this.buffs = { photos: 0, cats: 0, shield: 0 };
-    this.howlAt = 0; this.fireAt = 0; this.sendAt = 0; this.factAt = 0; this.proxFactShown = false;
-    this.ray = new THREE.Raycaster(); this.plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); this.tmp = new THREE.Vector3();
-    this.attract = 0; this.last = now();
-    net.onMsg = (m) => this.handle(m, true);
+    this.remotes = new Map(); this.playing = false; this.attract = 0; this.last = now();
+    this.bugs = []; this.drones = []; this.bolts = []; this.fx = []; this.customers = []; this.cars = [];
+    this.offers = {}; this.mission = null; this.pending = [];
+    this.S = { phase: 'idle', tl: CONFIG.SHIFT_SECONDS, leads: 0, jobs: { fix: 0, reviews: 0, page: 0 }, heat: 0, heatT: 0, stolen: 0 };
+    this.p = { x: 0, z: 0, r: 0, inVan: false, stun: 0, walk: 0, moving: false };
+    this.van = { x: 0, z: 0, r: 0, vx: 0, vz: 0, mesh: makeVan(true) };
+    this.scene.add(this.van.mesh);
+    this.wolf = null; // created on start, once the player has a name
+    this.arrow = makeArrow(); this.arrow.visible = false; this.scene.add(this.arrow);
+    this.page = makePage(); this.page.visible = false; this.scene.add(this.page);
+    this.fireAt = 0; this.howlAt = 0; this.sendAt = 0; this.secAt = 0; this.callAt = 0; this.droneAt = 0; this.action = '';
+    this.tmp = new THREE.Vector3(); this.cam = { x: 0, z: 0, s: 1 };
+    this.initTraffic(); this.placeAtHQ();
+    net.onMsg = (m) => this.onMsg(m);
     net.onRoster = (r) => this.onRoster(r);
     addEventListener('resize', () => this.resize()); this.resize();
     this.renderer.setAnimationLoop(() => this.frame());
   }
 
-  freshStats() { return { reviews: 0, captures: 0, fixes: 0, pages: 0 }; }
-
   resize() {
     const w = innerWidth, h = innerHeight;
     this.renderer.setSize(w, h, false); this.camera.aspect = w / h; this.camera.updateProjectionMatrix();
-    this.camScale = w < h ? 1.25 : 1;
+    this.camScale = w < h ? 1.65 : 1;
   }
 
-  // ---------- roster and wolves ----------
+  // ---------- other players ----------
   onRoster(roster) {
-    this.roster = roster;
-    const humans = roster.filter((m) => m.team >= 0);
-    const ids = new Set(humans.map((m) => m.id));
-    for (const m of humans) if (!this.wolves.has(m.id)) this.addWolf(m.id, m.name, m.team, false, m.fur || 0);
-    for (const [id, w] of this.wolves) if (!w.bot && !ids.has(id)) this.removeWolf(id);
-    const host = [...humans].sort((a, b) => a.j - b.j || (a.id < b.id ? -1 : 1))[0];
-    const wasHost = this.isHost;
-    this.isHost = !!host && host.id === this.me.id;
-    if (this.isHost && !wasHost) this.becomeHost();
-    this.ui.setRoster(humans, this.net.kind);
+    const ids = new Set(roster.map((m) => m.id));
+    for (const m of roster) {
+      if (m.id === this.me.id || this.remotes.has(m.id)) continue;
+      const wolf = makeWolf(m.name, COLORS.other, m.fur || 0, '#9fb0ff'), van = makeVan(false);
+      wolf.g.visible = false; van.visible = false; this.scene.add(wolf.g, van);
+      this.remotes.set(m.id, { name: m.name, x: 0, z: 0, r: 0, tx: 0, tz: 0, tr: 0, inVan: false, leads: 0, seen: false, wolf, van });
+    }
+    for (const [id, r] of this.remotes) if (!ids.has(id)) { this.scene.remove(r.wolf.g, r.van); this.remotes.delete(id); }
+    this.ui.setRoster(roster.length, this.net.kind);
+  }
+  onMsg(m) {
+    if (m.t === 'p') {
+      const r = this.remotes.get(m.id); if (!r) return;
+      if (!r.seen) { r.x = m.x; r.z = m.z; r.seen = true; }
+      r.tx = m.x; r.tz = m.z; r.tr = m.r; r.inVan = !!m.v; r.leads = m.l;
+    } else if (m.t === 'w') this.ring(m.x, m.z, COLORS.other, HOWL_R, 0.6);
+  }
+  board() {
+    const rows = [{ name: this.me.name, leads: Math.round(this.S.leads), me: true }];
+    for (const r of this.remotes.values()) if (r.seen) rows.push({ name: r.name, leads: r.leads });
+    return rows.sort((a, b) => b.leads - a.leads);
   }
 
-  addWolf(id, name, team, bot, fur) {
-    const isMe = id === this.me.id;
-    const mesh = makeWolf(name, team, isMe, fur);
-    const sx = (team ? 43 : -43) + (Math.random() * 4 - 2), sz = Math.random() * 6 - 3;
-    const w = { id, name, team, bot, x: sx, z: sz, r: team ? -Math.PI / 2 : Math.PI / 2, tx: sx, tz: sz, tr: 0,
-      hp: MAX_HP, dead: false, stun: 0, shield: false, moving: false, mesh, walk: 0, ai: null };
-    this.scene.add(mesh.g); this.wolves.set(id, w);
-    if (isMe) this.my = w;
-    return w;
+  // ---------- shift ----------
+  placeAtHQ() {
+    const z = this.world.hq.zone;
+    Object.assign(this.p, { x: z.x, z: z.z, r: 0, inVan: false, stun: 0 });
+    Object.assign(this.van, { x: z.x + 5.5, z: z.z + 1, r: Math.PI / 2, vx: 0, vz: 0 });
   }
-  removeWolf(id) { const w = this.wolves.get(id); if (!w) return; this.scene.remove(w.mesh.g); this.wolves.delete(id); }
-
-  spawn(w) {
-    w.x = (w.team ? 43 : -43) + (Math.random() * 4 - 2); w.z = Math.random() * 6 - 3;
-    w.hp = MAX_HP; w.dead = false; w.stun = 0; w.tx = w.x; w.tz = w.z;
+  start() {
+    if (!this.wolf) { this.wolf = makeWolf(this.me.name, COLORS.me, this.me.fur, '#fff078'); this.scene.add(this.wolf.g); }
+    this.playing = true; this.startShift();
   }
+  startShift() {
+    this.clearJob(); for (const d of this.drones) this.scene.remove(d.mesh.g); this.drones = [];
+    for (const k in this.offers) this.dropOffer(k);
+    this.S = { phase: 'shift', tl: CONFIG.SHIFT_SECONDS, leads: 0, jobs: { fix: 0, reviews: 0, page: 0 }, heat: 0, heatT: 0, stolen: 0 };
+    this.world.stores.forEach((s) => s.setRank(9 + Math.floor(Math.random() * 7)));
+    this.placeAtHQ(); this.pending = []; this.howlAt = 0; this.secAt = now() + 1000;
+    for (const k of Object.keys(JOBS)) this.spawnOffer(k);
+    this.ui.hideResults(); this.ui.banner('Shift started. Pick a job.', 2200);
+  }
+  endShift() {
+    this.S.phase = 'done'; this.clearJob();
+    for (const d of this.drones) this.scene.remove(d.mesh.g); this.drones = [];
+    this.sfx.capture(); this.ui.results(this.S, this.packCount(), this.board());
+  }
+  packCount() { return this.world.stores.filter((s) => s.rank <= 3).length; }
 
-  // ---------- messaging ----------
-  emit(m) { this.handle(m, false); this.net.send(m); }
+  // ---------- job offers ----------
+  spawnOffer(type) {
+    const busy = new Set(Object.values(this.offers).map((o) => o.store)); if (this.mission) busy.add(this.mission.store);
+    const me = this.pos();
+    let free = this.world.stores.filter((s) => !busy.has(s) && dist(s.zone.x, s.zone.z, me.x, me.z) > 24);
+    if (!free.length) free = this.world.stores.filter((s) => !busy.has(s));
+    const climbing = free.filter((s) => s.rank > 3).sort((a, b) => a.rank - b.rank);
+    const store = climbing.length && Math.random() < 0.7 ? climbing[0] : pick(climbing.length ? climbing : free);
+    const job = JOBS[type], beacon = makeBeacon(job.color, job.label, job.css);
+    beacon.g.position.set(store.zone.x, 0, store.zone.z); this.scene.add(beacon.g);
+    this.offers[type] = { type, store, beacon };
+  }
+  dropOffer(type) { const o = this.offers[type]; if (!o) return; this.scene.remove(o.beacon.g); delete this.offers[type]; }
 
-  handle(m, remote) {
-    switch (m.t) {
-      case 'p': { // player state
-        const w = this.wolves.get(m.id); if (!w || w === this.my) break;
-        w.tx = m.x; w.tz = m.z; w.tr = m.r; w.hp = m.hp; w.dead = !!(m.f & 1); w.shield = !!(m.f & 4); w.moving = !!(m.f & 8);
-        w.stun = m.f & 2 ? now() + 300 : 0;
-        break;
+  startJob(o) {
+    const job = JOBS[o.type], z = o.store.zone;
+    const m = this.mission = { type: o.type, store: o.store, job, tl: job.seconds, need: job.need, got: 0, stage: 0, hold: 0, beacon: null };
+    this.dropOffer(o.type);
+    if (o.type === 'fix') {
+      for (let i = 0; i < m.need; i++) {
+        const label = ISSUES[(i + Math.floor(Math.random() * 3)) % ISSUES.length], mesh = makeBug(label);
+        const b = { x: z.x + rand(-9, 9), z: z.z + rand(-4, 4), hp: 3, a: rand(0, 6.28), turnAt: 0, mesh, bug: true }; collide(b, 1);
+        this.scene.add(mesh.g); this.bugs.push(b);
       }
-      case 's': if (remote) this.addStar(m.x, m.z, m.a, m.team, m.id, false); break;
-      case 'h': this.onHit(m); break;
-      case 'w': this.onHowl(m); break;
-      case 'g': if (this.isHost) this.grantPad(m.pad, m.id); break;
-      case 'gv': this.onGrant(m); break;
-      case 'e': this.onEvent(m); break;
-      case 'k': this.ui.feed(`${this.nameOf(m.by)} sent ${this.nameOf(m.id)} back to the den`); break;
-      case 'st': if (!this.isHost) this.onSnapshot(m); break;
+    } else if (o.type === 'reviews') {
+      for (let i = 0; i < m.need; i++) {
+        const pt = sidewalkPoint(z.x, z.z, 14, 62), mesh = makeWolf('★ ASK ME', COLORS.customer, i + 1, '#ff9dc8');
+        mesh.g.position.set(pt.x, 0, pt.z); mesh.body.rotation.y = rand(0, 6.28); this.scene.add(mesh.g);
+        this.customers.push({ x: pt.x, z: pt.z, mesh });
+      }
+    } else {
+      m.pageName = pick(job.pages); this.setBeacon(this.world.hq.zone, 'PICK UP ' + m.pageName.toUpperCase());
+    }
+    this.sfx.pickup();
+    this.ui.brief(o.store.def.name, pick(job.brief), job.label, job.css);
+  }
+  setBeacon(pt, label) {
+    const m = this.mission; if (m.beacon) this.scene.remove(m.beacon.g);
+    m.beacon = makeBeacon(m.job.color, label, m.job.css); m.beacon.g.position.set(pt.x, 0, pt.z); this.scene.add(m.beacon.g); m.point = pt;
+  }
+  clearJob() {
+    for (const b of this.bugs) this.scene.remove(b.mesh.g); this.bugs = [];
+    for (const c of this.customers) this.scene.remove(c.mesh.g); this.customers = [];
+    if (this.mission && this.mission.beacon) this.scene.remove(this.mission.beacon.g);
+    this.page.visible = false; this.mission = null;
+  }
+  finishJob(won) {
+    const m = this.mission, S = this.S, type = m.type;
+    if (won) {
+      const reward = 100 + Math.round(m.tl * 2), before = m.store.rank, was = this.packCount();
+      S.leads += reward; S.jobs[type]++;
+      m.store.setRank(Math.max(1, before - 3 - Math.floor(Math.random() * 3)));
+      S.heat = Math.min(3, S.heat + 1); S.heatT = 24; this.droneAt = now() + 2500;
+      this.sfx.capture(); this.ring(m.store.zone.x, m.store.zone.z, m.job.color, 12, 0.7);
+      this.ui.banner(`Job done. +${reward} leads`, 2400);
+      this.ui.feed(`${m.store.def.name}: rank #${before} to #${m.store.rank}`, m.job.css);
+      if (this.packCount() > was) { this.ui.feed(`${m.store.def.name} is in the Map Pack. +3 leads a second.`, '#fff078'); this.ui.fact(FACTS.pack); }
+      else this.ui.fact(pick(m.job.facts));
+      if (S.heat === 1 && S.jobs.fix + S.jobs.reviews + S.jobs.page === 1) this.pending.push({ at: now() + 6500, fn: () => this.ui.fact(FACTS.heat) });
+    } else {
+      this.sfx.hurt(); this.ui.banner('Out of time. Client still invisible.', 2400);
+    }
+    this.clearJob();
+    this.pending.push({ at: now() + 2500, fn: () => { if (this.S.phase === 'shift' && !this.offers[type]) this.spawnOffer(type); } });
+  }
+
+  target() {
+    const p = this.pos(), m = this.mission;
+    let best = null, bd = Infinity;
+    const consider = (o) => { const d = dist(p.x, p.z, o.x, o.z); if (d < bd) { bd = d; best = o; } };
+    if (!m) Object.values(this.offers).forEach((o) => consider(o.store.zone));
+    else if (m.type === 'fix') this.bugs.forEach(consider);
+    else if (m.type === 'reviews') this.customers.forEach(consider);
+    else consider(m.stage === 0 ? this.world.hq.zone : m.store.zone);
+    return best && { x: best.x, z: best.z, d: bd };
+  }
+  pos() { return this.p.inVan ? this.van : this.p; }
+
+  // ---------- effects ----------
+  ring(x, z, color, grow, dur) { const mesh = makeRing(color); mesh.position.x = x; mesh.position.z = z; this.scene.add(mesh); this.fx.push({ mesh, t: 0, dur, grow }); }
+  starUp(x, z) { const mesh = makeStar(1.8); mesh.position.set(x, 2, z); this.scene.add(mesh); this.fx.push({ mesh, t: 0, dur: 0.9, rise: 7 }); }
+
+  kill(e) {
+    this.ring(e.x, e.z, 0xff5252, 3, 0.3); this.scene.remove(e.mesh.g); this.sfx.hit();
+    if (e.bug) { this.bugs.splice(this.bugs.indexOf(e), 1); if (this.mission) this.mission.got++; }
+    else this.drones.splice(this.drones.indexOf(e), 1);
+  }
+
+  // ---------- traffic ----------
+  initTraffic() {
+    let i = 0;
+    for (const r of ROADS) for (const dir of [1, -1]) for (const axis of ['x', 'z']) {
+      const lane = axis === 'x' ? r + 3 * dir : r - 3 * dir;
+      const c = { axis, dir, lane, t: rand(-100, 100), speed: rand(8, 12), mesh: makeCar(i++), x: 0, z: 0 };
+      c.mesh.rotation.y = axis === 'x' ? (dir > 0 ? Math.PI / 2 : -Math.PI / 2) : (dir > 0 ? 0 : Math.PI);
+      this.scene.add(c.mesh); this.cars.push(c);
     }
   }
-  nameOf(id) { const w = this.wolves.get(id); return w ? w.name : 'A wolf'; }
-
-  // ---------- shooting ----------
-  addStar(x, z, a, team, shooter, mine, pow = HIT_POW) {
-    const mesh = makeStar(team); mesh.position.set(x, 1.4, z); this.scene.add(mesh);
-    this.stars.push({ x, z, dx: Math.sin(a), dz: Math.cos(a), life: STAR_LIFE, team, shooter, mine, pow, mesh, ox: x, oz: z });
+  updateTraffic(dt) {
+    const blockers = [this.p.inVan ? null : this.p, this.van].filter(Boolean);
+    for (const c of this.cars) {
+      let go = true;
+      for (const b of blockers) {
+        const along = ((c.axis === 'x' ? b.x : b.z) - c.t) * c.dir, side = Math.abs((c.axis === 'x' ? b.z : b.x) - c.lane);
+        if (side < 2.8 && along > 0 && along < 9) go = false;
+      }
+      if (go) c.t += c.dir * c.speed * dt;
+      if (c.t > 106) c.t = -106; if (c.t < -106) c.t = 106;
+      c.x = c.axis === 'x' ? c.t : c.lane; c.z = c.axis === 'x' ? c.lane : c.t;
+      c.mesh.position.set(c.x, 0, c.z);
+    }
+  }
+  pushFromCars(e, R) {
+    for (const c of this.cars) {
+      const d = dist(e.x, e.z, c.x, c.z), min = R + 1.9;
+      if (d < min && d > 1e-4) { e.x = c.x + ((e.x - c.x) / d) * min; e.z = c.z + ((e.z - c.z) / d) * min; }
+    }
   }
 
-  shoot(w, a, pow) {
-    const x = w.x + Math.sin(a) * 1.6, z = w.z + Math.cos(a) * 1.6;
-    this.addStar(x, z, a, w.team, w.id, true, pow);
-    this.net.send({ t: 's', id: w.id, x: +x.toFixed(2), z: +z.toFixed(2), a: +a.toFixed(3), team: w.team });
-  }
+  // ---------- one simulation step ----------
+  tick(dt) {
+    const S = this.S, p = this.p, van = this.van, inp = this.input, t = now();
+    S.tl -= dt; if (S.tl <= 0) { S.tl = 0; this.endShift(); return; }
+    for (let i = this.pending.length - 1; i >= 0; i--) if (t >= this.pending[i].at) this.pending.splice(i, 1)[0].fn();
 
-  updateStars(dt) {
-    for (let i = this.stars.length - 1; i >= 0; i--) {
-      const s = this.stars[i];
-      s.x += s.dx * STAR_SPEED * dt; s.z += s.dz * STAR_SPEED * dt; s.life -= dt;
-      s.mesh.position.set(s.x, 1.4, s.z); s.mesh.rotation.z += dt * 12;
-      let gone = s.life <= 0;
-      const c = !gone && pointHit(s.x, s.z);
-      if (c) {
-        gone = true;
-        if (c.store !== undefined) {
-          this.burst(s.x, s.z, s.team);
-          if (s.mine) {
-            const near = dist(s.ox, s.oz, c.x, c.z) < 15;
-            this.emit({ t: 'h', k: 's', i: c.store, team: s.team, pow: s.pow * (near ? 1.5 : 1), id: s.shooter });
-            if (s.shooter === this.me.id) {
-              this.stats.reviews++; this.sfx.hit();
-              if (near && !this.proxFactShown) { this.proxFactShown = true; this.fact(FACTS.proximity, true); }
-            }
+    // context action: van in, van out, or call the van
+    const nearVan = dist(p.x, p.z, van.x, van.z) < 7.5;
+    this.action = p.inVan ? 'EXIT VAN' : nearVan ? 'DRIVE' : 'CALL VAN';
+    if (inp.act) {
+      inp.act = false;
+      if (p.inVan) {
+        p.inVan = false; van.vx = van.vz = 0;
+        p.x = van.x + Math.cos(van.r) * 3.4; p.z = van.z - Math.sin(van.r) * 3.4; collide(p, R_FOOT);
+      } else if (nearVan) { p.inVan = true; this.sfx.pickup(); }
+      else if (t >= this.callAt) {
+        this.callAt = t + 3000;
+        const pt = roadPoint(p.x, p.z, 5, 13, 3); Object.assign(van, { x: pt.x, z: pt.z, vx: 0, vz: 0 });
+        this.ring(pt.x, pt.z, COLORS.me, 5, 0.5); this.sfx.pickup(); this.ui.banner('Van delivered.', 1200);
+      }
+    }
+
+    // movement
+    let mx = inp.move.x, mz = inp.move.y; const ml = Math.hypot(mx, mz), mag = Math.min(1, ml);
+    if (ml > 0.001) { mx /= ml; mz /= ml; }
+    if (p.inVan) {
+      const k = Math.min(1, dt * (mag > 0.1 ? 2.4 : 3));
+      van.vx += (mx * mag * VAN_MAX - van.vx) * k; van.vz += (mz * mag * VAN_MAX - van.vz) * k;
+      van.x += van.vx * dt; van.z += van.vz * dt;
+      if (collide(van, R_VAN)) { van.vx *= 0.6; van.vz *= 0.6; }
+      this.pushFromCars(van, R_VAN);
+      if (Math.hypot(van.vx, van.vz) > 1.5) { let dr = Math.atan2(van.vx, van.vz) - van.r; dr = Math.atan2(Math.sin(dr), Math.cos(dr)); van.r += dr * Math.min(1, dt * 9); }
+      p.x = van.x; p.z = van.z; p.moving = false;
+    } else {
+      p.moving = mag > 0.12 && t >= p.stun;
+      if (p.moving) { p.x += mx * mag * FOOT * dt; p.z += mz * mag * FOOT * dt; p.r = Math.atan2(mx, mz); p.walk += dt * 14; }
+      collide(p, R_FOOT); this.pushFromCars(p, R_FOOT);
+    }
+    const me = this.pos(), speed = p.inVan ? Math.hypot(van.vx, van.vz) : 0;
+
+    // job offers and the active job
+    const m = this.mission;
+    if (!m) { for (const o of Object.values(this.offers)) if (dist(me.x, me.z, o.store.zone.x, o.store.zone.z) < ZONE) { this.startJob(o); break; } }
+    else {
+      m.tl -= dt;
+      if (m.type === 'reviews') {
+        for (let i = this.customers.length - 1; i >= 0; i--) {
+          const c = this.customers[i];
+          if (dist(me.x, me.z, c.x, c.z) < (p.inVan ? 5 : 3.4)) {
+            this.starUp(c.x, c.z); this.scene.remove(c.mesh.g); this.customers.splice(i, 1); m.got++; this.sfx.capture();
+            this.ui.feed(pick(['★★★★★ "Showed up on time."', '★★★★★ "Fixed it first visit."', '★★★★★ "Would call again."', '★★★★★ "Fair price. Great work."']), '#fff078');
           }
         }
+      } else if (m.type === 'page') {
+        const near = dist(me.x, me.z, m.point.x, m.point.z) < ZONE;
+        if (m.stage === 0 && near) { m.stage = 1; this.sfx.pickup(); this.setBeacon(m.store.zone, 'PUBLISH HERE'); this.ui.banner(m.pageName + ' picked up. Deliver it.', 1800); }
+        else if (m.stage === 1) { m.hold = near ? m.hold + dt : 0; if (m.hold >= 1.2) m.got = 1; }
+        this.page.visible = m.stage === 1;
       }
-      if (!gone) {
-        for (const w of this.wolves.values()) {
-          if (w.team === s.team || w.dead || dist(s.x, s.z, w.x, w.z) > 1.25) continue;
-          gone = true; this.burst(s.x, s.z, s.team);
-          if (s.mine) this.emit({ t: 'h', k: 'w', to: w.id, id: s.shooter });
-          break;
-        }
-      }
-      if (gone) { this.scene.remove(s.mesh); this.stars.splice(i, 1); }
+      if (m.got >= m.need) this.finishJob(true); else if (m.tl <= 0) this.finishJob(false);
     }
-  }
 
-  onHit(m) {
-    if (m.k === 's') { if (this.isHost) this.hostStoreHit(m.i, m.team, m.pow, m.id); return; }
-    const w = this.wolves.get(m.to); if (!w) return;
-    if (w === this.my) this.damage(w, m.id);
-    else if (w.bot && this.isHost) this.damage(w, m.id);
-  }
-
-  damage(w, by) {
-    if (w.dead || w.shield || this.G.ph !== 'play') return;
-    w.hp--;
-    if (w === this.my) { this.sfx.hurt(); this.ui.flash(); }
-    if (w.hp <= 0) {
-      w.dead = true; w.respawnAt = now() + RESPAWN_MS;
-      this.emit({ t: 'k', id: w.id, by });
-    }
-  }
-
-  // ---------- howl ----------
-  howl(w) {
-    this.emit({ t: 'w', id: w.id, x: +w.x.toFixed(1), z: +w.z.toFixed(1), team: w.team });
-  }
-  onHowl(m) {
-    const ring = makeHowlRing(m.team); ring.position.x = m.x; ring.position.z = m.z; this.scene.add(ring);
-    this.fx.push({ mesh: ring, t: 0, dur: 0.6, grow: HOWL_R });
-    this.sfx.howl(m.id === this.me.id ? 1 : 0.4);
-    const stunIf = (w) => { if (w.team !== m.team && !w.dead && !w.shield && dist(w.x, w.z, m.x, m.z) < HOWL_R) w.stun = now() + 1600; };
-    if (this.my) stunIf(this.my);
-    if (this.isHost) {
-      for (const w of this.wolves.values()) if (w.bot) stunIf(w);
-      this.world.stores.forEach((s, i) => { if (dist(s.front.x, s.front.z, m.x, m.z) < HOWL_R + 2) this.hostStoreHit(i, m.team, HOWL_BOOST, m.id, true); });
-    }
-  }
-
-  // ---------- pickups ----------
-  onGrant(m) {
-    const p = PICKUPS[m.type], w = this.wolves.get(m.id);
-    if (w) this.burst(w.x, w.z, w.team);
-    if (m.id !== this.me.id) return;
-    const t = now() + 8000;
-    if (p.key === 'photos') this.buffs.photos = t;
-    if (p.key === 'cats') this.buffs.cats = t;
-    if (p.key === 'reply') { this.my.hp = MAX_HP; this.buffs.shield = now() + 6000; }
-    this.stats.pages++; this.sfx.pickup(); this.ui.buff(p.label, p.buff); this.fact(p.fact, true);
-  }
-
-  // ---------- events and facts ----------
-  onEvent(m) {
-    if (m.k === 'cap') {
-      const s = STORES[m.i];
-      this.ui.feed(`${this.nameOf(m.by)} ranked ${s.name} for ${TEAMS[m.team].name}`, TEAMS[m.team].css);
-      if (m.by === this.me.id) { this.stats.captures++; this.sfx.capture(); this.fact(pick(FACTS.capture)); }
-    } else if (m.k === 'spam') {
-      this.ui.feed(`${ISSUES[m.kind].label} at ${STORES[m.i].name}. Shoot it to fix it.`, '#ff6b6b'); this.fact(ISSUES[m.kind].fact);
-    } else if (m.k === 'report') {
-      this.ui.feed(`${this.nameOf(m.by)} fixed the site issue. +15 leads for ${TEAMS[m.team].name}`, TEAMS[m.team].css);
-      if (m.by === this.me.id) { this.stats.fixes++; this.sfx.capture(); this.fact(FACTS.fixed, true); }
-    }
-  }
-  fact(text, force) {
-    if (!force && now() < this.factAt) return;
-    this.factAt = now() + 7000; this.ui.fact(text);
-  }
-
-  burst(x, z, team) {
-    const m = makeHowlRing(team); m.position.set(x, 1.4, z); m.rotation.x = 0; m.lookAt(this.camera.position); this.scene.add(m);
-    this.fx.push({ mesh: m, t: 0, dur: 0.25, grow: 1.6 });
-  }
-
-  // ---------- host ----------
-  becomeHost() {
-    const G = this.G;
-    this.H = { spamAt: now() + 12000, padAt: G.pads.map(() => now() + 4000), secAt: now() + 1000, snapAt: 0, phaseEnd: 0, prevOwner: G.v.map(ownerOf) };
-    if (G.ph === 'wait') this.hostPhase('count', 5);
-    else this.H.phaseEnd = now() + G.tl * 1000;
-  }
-  hostPhase(ph, secs) {
-    const G = this.G, H = this.H;
-    G.ph = ph; G.tl = secs; H.phaseEnd = now() + secs * 1000;
-    if (ph === 'count') {
-      G.round++; G.v = STORES.map(() => 0); G.sc = [0, 0]; G.spam = null; G.pads = G.pads.map(() => 0);
-      H.prevOwner = G.v.map(() => -1); H.spamAt = now() + 15000; H.padAt = G.pads.map(() => now() + 9000);
-      for (const w of this.wolves.values()) if (w.bot) { this.spawn(w); w.ai = null; }
-      this.onRound();
-    }
-    this.snapshot();
-  }
-  hostStoreHit(i, team, pow, by, isHowl) {
-    const G = this.G; if (G.ph !== 'play') return;
-    if (G.spam && G.spam.i === i) {
-      if (isHowl) return;
-      if (--G.spam.hp <= 0) { G.spam = null; G.sc[team] += 15; this.H.spamAt = now() + 9000; this.emit({ t: 'e', k: 'report', team, by }); }
-      return;
-    }
-    G.v[i] = clamp(G.v[i] + (team ? -pow : pow), -100, 100);
-    const o = ownerOf(G.v[i]);
-    if (o !== this.H.prevOwner[i]) { this.H.prevOwner[i] = o; if (o >= 0) this.emit({ t: 'e', k: 'cap', i, team: o, by }); }
-  }
-  grantPad(pad, id) {
-    const G = this.G, type = G.pads[pad]; if (!type || G.ph !== 'play') return;
-    G.pads[pad] = 0; this.H.padAt[pad] = now() + 14000;
-    const w = this.wolves.get(id);
-    if (w) G.sc[w.team] += PAGE_LEADS;
-    if (PICKUPS[type].key === 'nap' && w) G.v = G.v.map((v) => (ownerOf(v) === w.team ? clamp(v + (w.team ? -12 : 12), -100, 100) : v));
-    this.emit({ t: 'gv', id, pad, type });
-  }
-  snapshot() {
-    const G = this.G;
-    const bots = []; for (const w of this.wolves.values()) if (w.bot) bots.push([w.id, +w.x.toFixed(1), +w.z.toFixed(1), +w.r.toFixed(2), w.hp, w.team, (w.dead ? 1 : 0) | (now() < w.stun ? 2 : 0) | (w.moving ? 8 : 0), w.name]);
-    this.net.send({ t: 'st', ph: G.ph, tl: +G.tl.toFixed(1), v: G.v.map(Math.round), spam: G.spam, pads: G.pads, sc: G.sc, round: G.round, bots });
-  }
-  onSnapshot(m) {
-    const G = this.G, newRound = m.round !== G.round;
-    Object.assign(G, { ph: m.ph, tl: m.tl, v: m.v, spam: m.spam, pads: m.pads, sc: m.sc, round: m.round });
-    if (newRound) this.onRound();
-    const seen = new Set();
-    for (const [id, x, z, r, hp, team, f, name] of m.bots) {
-      seen.add(id);
-      const w = this.wolves.get(id) || this.addWolf(id, name, team, true, id.charCodeAt(id.length - 1));
-      w.tx = x; w.tz = z; w.tr = r; w.hp = hp; w.dead = !!(f & 1); w.stun = f & 2 ? now() + 300 : 0; w.moving = !!(f & 8);
-    }
-    for (const [id, w] of this.wolves) if (w.bot && !seen.has(id)) this.removeWolf(id);
-  }
-  onRound() {
-    this.stats = this.freshStats(); this.buffs = { photos: 0, cats: 0, shield: 0 }; this.howlAt = 0; this.shownEnd = false;
-    if (this.my) this.spawn(this.my);
-    this.ui.hideResults();
-  }
-
-  hostTick(dt) {
-    const G = this.G, H = this.H, t = now();
-    G.tl = Math.max(0, (H.phaseEnd - t) / 1000);
-    if (t >= H.phaseEnd) {
-      if (G.ph === 'count') this.hostPhase('play', CONFIG.ROUND_SECONDS);
-      else if (G.ph === 'play') this.hostPhase('end', 14);
-      else this.hostPhase('count', 5);
-    }
-    this.botRoster();
-    if (G.ph === 'play') {
-      if (t >= H.secAt) {
-        H.secAt = t + 1000;
-        const pack = new Set(mapPack(G.v).map((s) => s.i));
-        G.v.forEach((v, i) => {
-          const o = ownerOf(v); if (o < 0) return;
-          if (G.spam && G.spam.i === i) { G.v[i] = v - Math.sign(v) * 4; return; }
-          G.sc[o] += pack.has(i) ? 3 : 1;
-        });
-      }
-      if (!G.spam && t >= H.spamAt) {
-        const i = Math.floor(Math.random() * STORES.length);
-        const kind = Math.floor(Math.random() * ISSUES.length);
-        G.spam = { i, hp: SPAM_HP, kind }; this.emit({ t: 'e', k: 'spam', i, kind });
-      }
-      G.pads.forEach((p, i) => { if (!p && t >= H.padAt[i]) G.pads[i] = 1 + Math.floor(Math.random() * 4); });
-    }
-    for (const w of this.wolves.values()) {
-      if (!w.bot) continue;
-      if (w.dead) { if (t >= (w.respawnAt || 0)) this.spawn(w); continue; }
-      if (G.ph === 'play') this.botThink(w, dt);
-    }
-    if (t >= H.snapAt) { H.snapAt = t + 160; this.snapshot(); }
-  }
-
-  botRoster() {
-    for (let team = 0; team < 2; team++) {
-      const humans = this.roster.filter((m) => m.team === team).length;
-      const bots = [...this.wolves.values()].filter((w) => w.bot && w.team === team);
-      const want = Math.max(0, CONFIG.PACK_SIZE - humans);
-      for (let i = bots.length; i < want; i++) {
-        const used = new Set([...this.wolves.values()].map((w) => w.name));
-        const name = BOT_NAMES.find((n) => !used.has(n)) || 'Wolf';
-        const w = this.addWolf('bot' + team + Math.random().toString(36).slice(2, 6), name, team, true, i + team + 1);
-        w.respawnAt = 0;
-      }
-      for (let i = want; i < bots.length; i++) this.removeWolf(bots[i].id);
-    }
-  }
-
-  botThink(w, dt) {
-    const t = now(), G = this.G;
-    w.moving = false;
-    if (t < w.stun) return;
-    const ai = w.ai || (w.ai = { target: -1, retarget: 0, fireAt: t + 600 + Math.random() * 600, howlAt: t + 6000 + Math.random() * 8000, off: 0 });
-    const sign = w.team ? -1 : 1;
-    if (t >= ai.retarget) {
-      let best = Infinity;
-      this.world.stores.forEach((s, i) => {
-        const v = G.v[i] * sign;
-        let score = dist(w.x, w.z, s.front.x, s.front.z) + (v >= OWN_AT ? 45 + v * 0.4 : 0) + Math.random() * 18;
-        if (G.spam && G.spam.i === i) score -= 20;
-        if (score < best) { best = score; ai.target = i; }
-      });
-      ai.retarget = t + 4000 + Math.random() * 3500; ai.off = Math.random() * 8 - 4;
-    }
-    const s = this.world.stores[ai.target];
-    const gx = s.front.x + ai.off, gz = s.front.z, d = dist(w.x, w.z, gx, gz);
-    if (d > 1.2) {
-      const px = w.x, pz = w.z;
-      w.x += ((gx - w.x) / d) * BOT_SPEED * dt; w.z += ((gz - w.z) / d) * BOT_SPEED * dt; collide(w);
-      if (dist(px, pz, w.x, w.z) < BOT_SPEED * dt * 0.3) { w.x += (Math.random() - 0.5) * 0.8; w.z += (Math.random() - 0.5) * 0.8; collide(w); }
-      w.moving = true;
-    }
-    let foe = null, fd = 13;
-    for (const o of this.wolves.values()) { if (o.team === w.team || o.dead) continue; const dd = dist(w.x, w.z, o.x, o.z); if (dd < fd) { fd = dd; foe = o; } }
-    const atFoe = foe && (ai.foeBias ?? (ai.foeBias = Math.random())) < 0.45;
-    const ax = atFoe ? foe.x : s.def.x, az = atFoe ? foe.z : s.def.z;
-    w.r = Math.atan2(ax - w.x, az - w.z);
-    if (t >= ai.fireAt && (atFoe || d < 14)) {
-      ai.fireAt = t + BOT_FIRE_MS + Math.random() * 250; ai.foeBias = Math.random();
-      this.shoot(w, w.r + (Math.random() - 0.5) * 0.14, HIT_POW);
-    }
-    if (t >= ai.howlAt && ((foe && fd < 8) || (d < 3 && G.v[ai.target] * sign < OWN_AT))) { ai.howlAt = t + 15000; this.howl(w); }
-  }
-
-  // ---------- local player ----------
-  playerTick(dt) {
-    const w = this.my, t = now(), inp = this.input, G = this.G;
-    if (!w) return;
-    w.shield = t < this.buffs.shield;
-    if (w.dead) { if (t >= w.respawnAt) this.spawn(w); }
-    else if (G.ph === 'play' || G.ph === 'count') {
-      const stunned = t < w.stun;
-      let mx = inp.move.x, mz = inp.move.y; const ml = Math.hypot(mx, mz);
-      w.moving = ml > 0.1 && !stunned && G.ph === 'play';
-      if (w.moving) { const k = Math.min(1, ml) / ml; w.x += mx * k * SPEED * dt; w.z += mz * k * SPEED * dt; collide(w); }
-      if (inp.pointer) { // desktop: aim at the cursor on the ground
-        this.ray.setFromCamera(inp.pointer, this.camera);
-        if (this.ray.ray.intersectPlane(this.plane, this.tmp)) w.r = Math.atan2(this.tmp.x - w.x, this.tmp.z - w.z);
-      } else if (Math.hypot(inp.aim.x, inp.aim.y) > 0.2) w.r = Math.atan2(inp.aim.x, inp.aim.y);
-      else if (w.moving) w.r = Math.atan2(mx, mz);
-      if (G.ph === 'play' && !stunned) {
-        if (inp.fire && t >= this.fireAt) {
-          this.fireAt = t + (t < this.buffs.cats ? FIRE_MS / 2 : FIRE_MS);
-          this.shoot(w, w.r, HIT_POW * (t < this.buffs.photos ? 2 : 1)); this.sfx.shoot();
-        }
-        if (inp.howl && t >= this.howlAt) { this.howlAt = t + HOWL_CD; this.howl(w); this.fact(FACTS.howl); }
-        this.world.pads.forEach((p, i) => { if (G.pads[i] && dist(w.x, w.z, p.x, p.z) < 2 && t >= (p.askAt || 0)) { p.askAt = t + 600; this.emit({ t: 'g', pad: i, id: w.id }); } });
+    // heat: spam bots hunt the player
+    if (S.heat > 0) {
+      S.heatT -= dt; if (S.heatT <= 0) { S.heat--; S.heatT = 24; }
+      if (t >= this.droneAt && this.drones.length < S.heat * 2) {
+        this.droneAt = t + 6000; const pt = roadPoint(me.x, me.z, 30, 48), mesh = makeDrone();
+        this.scene.add(mesh.g); this.drones.push({ x: pt.x, z: pt.z, hp: 2, mesh });
       }
     }
-    inp.howl = false;
+    for (let i = this.drones.length - 1; i >= 0; i--) {
+      const d = this.drones[i], dd = dist(d.x, d.z, me.x, me.z), sp = 7.5 + S.heat * 0.6;
+      if (dd > 0.1) { d.x += ((me.x - d.x) / dd) * sp * dt; d.z += ((me.z - d.z) / dd) * sp * dt; }
+      if (dd < (p.inVan ? 2.8 : 1.7)) {
+        if (p.inVan && speed > 9) { this.kill(d); continue; }
+        const take = Math.min(25, Math.floor(S.leads)); S.leads -= take; S.stolen += take; if (!p.inVan) p.stun = t + 700;
+        this.sfx.hurt(); this.ui.flash(); this.ui.feed(`Spam bot stole ${take} leads`, '#ff2d6f'); this.kill(d);
+      }
+    }
+    for (let i = this.bugs.length - 1; i >= 0; i--) {
+      const b = this.bugs[i], z = this.mission.store.zone;
+      if (t >= b.turnAt) { b.turnAt = t + rand(500, 1400); b.a = dist(b.x, b.z, z.x, z.z) > 14 ? Math.atan2(z.x - b.x, z.z - b.z) : dist(b.x, b.z, me.x, me.z) < 9 ? Math.atan2(b.x - me.x, b.z - me.z) + rand(-0.6, 0.6) : rand(0, 6.28); }
+      b.x += Math.sin(b.a) * 5.2 * dt; b.z += Math.cos(b.a) * 5.2 * dt; if (collide(b, 1)) b.turnAt = 0;
+      if (p.inVan && speed > 9 && dist(b.x, b.z, me.x, me.z) < 3) this.kill(b);
+    }
+
+    // auto aim and auto fire
+    let foe = null, fd = RANGE;
+    for (const e of this.bugs) { const d = dist(e.x, e.z, me.x, me.z); if (d < fd) { fd = d; foe = e; } }
+    for (const e of this.drones) { const d = dist(e.x, e.z, me.x, me.z); if (d < fd) { fd = d; foe = e; } }
+    if (foe && t >= p.stun) {
+      if (!p.inVan && !p.moving) p.r = Math.atan2(foe.x - p.x, foe.z - p.z);
+      if (t >= this.fireAt) {
+        this.fireAt = t + (p.inVan ? 480 : 290);
+        const mesh = makeStar(0.9); mesh.position.set(me.x, 1.6, me.z); this.scene.add(mesh);
+        this.bolts.push({ x: me.x, z: me.z, foe, life: 0.8, mesh }); this.sfx.shoot();
+      }
+    }
+    for (let i = this.bolts.length - 1; i >= 0; i--) {
+      const b = this.bolts[i], f = b.foe, alive = this.bugs.includes(f) || this.drones.includes(f);
+      const d = dist(b.x, b.z, f.x, f.z); b.life -= dt;
+      if (alive && d > 1.3) { b.x += ((f.x - b.x) / d) * 52 * dt; b.z += ((f.z - b.z) / d) * 52 * dt; b.mesh.position.set(b.x, 1.6, b.z); b.mesh.rotation.z += dt * 14; }
+      if (!alive || d <= 1.3 || b.life <= 0) {
+        if (alive && d <= 2.2 && --f.hp <= 0) this.kill(f);
+        this.scene.remove(b.mesh); this.bolts.splice(i, 1);
+      }
+    }
+
+    // howl
+    if (inp.howl) {
+      inp.howl = false;
+      if (t >= this.howlAt) {
+        this.howlAt = t + HOWL_CD; this.ring(me.x, me.z, COLORS.me, HOWL_R, 0.6); this.sfx.howl(1);
+        for (const e of [...this.bugs, ...this.drones]) if (dist(e.x, e.z, me.x, me.z) < HOWL_R) this.kill(e);
+        this.net.send({ t: 'w', x: +me.x.toFixed(1), z: +me.z.toFixed(1) });
+      }
+    }
+
+    // Map Pack clients pay every second
+    if (t >= this.secAt) { this.secAt = t + 1000; S.leads += 3 * this.packCount(); }
+
     if (t >= this.sendAt) {
-      this.sendAt = t + 110;
-      this.net.send({ t: 'p', id: w.id, x: +w.x.toFixed(2), z: +w.z.toFixed(2), r: +w.r.toFixed(2), hp: w.hp,
-        f: (w.dead ? 1 : 0) | (t < w.stun ? 2 : 0) | (w.shield ? 4 : 0) | (w.moving ? 8 : 0) });
+      this.sendAt = t + 120;
+      this.net.send({ t: 'p', id: this.me.id, x: +me.x.toFixed(2), z: +me.z.toFixed(2), r: +(p.inVan ? van.r : p.r).toFixed(2), v: p.inVan ? 1 : 0, l: Math.round(S.leads) });
     }
   }
 
   // ---------- frame ----------
   frame() {
     const t = now(), dt = Math.min(0.05, (t - this.last) / 1000); this.last = t;
-    const G = this.G;
-    if (this.playing) {
-      this.playerTick(dt);
-      if (this.isHost) this.hostTick(dt); else if (G.ph !== 'wait') G.tl = Math.max(0, G.tl - dt);
-    }
-    this.updateStars(dt);
+    const p = this.p, van = this.van;
+    this.updateTraffic(dt);
+    if (this.playing && this.S.phase === 'shift') this.tick(dt);
 
-    for (const w of this.wolves.values()) {
-      if (w !== this.my && !(w.bot && this.isHost)) {
-        const k = Math.min(1, dt * 12);
-        w.x += (w.tx - w.x) * k; w.z += (w.tz - w.z) * k;
-        let dr = w.tr - w.r; dr = Math.atan2(Math.sin(dr), Math.cos(dr)); w.r += dr * k;
-      }
-      const m = w.mesh; m.g.visible = !w.dead; m.g.position.set(w.x, 0, w.z); m.body.rotation.y = w.r;
-      if (w.moving) w.walk += dt * 14;
-      m.legs.forEach((l, i) => { l.rotation.x = w.moving ? Math.sin(w.walk + (i % 3 ? Math.PI : 0)) * 0.7 : 0; });
-      if (m.tail) m.tail.rotation.y = Math.sin(t / 180 + w.x) * 0.4;
-      if (m.model) { m.body.position.y = w.moving ? Math.abs(Math.sin(w.walk * 0.8)) * 0.35 : 0; m.body.rotation.x = w.moving ? Math.sin(w.walk * 1.6) * 0.06 : 0; }
-      m.body.rotation.z = t < w.stun ? Math.sin(t / 40) * 0.25 : 0;
-      m.shield.visible = w.shield;
+    if (this.wolf) {
+      const w = this.wolf; w.g.visible = !p.inVan; w.g.position.set(p.x, 0, p.z); w.body.rotation.y = p.r;
+      w.body.position.y = p.moving ? Math.abs(Math.sin(p.walk * 0.8)) * 0.35 : 0;
+      w.body.rotation.z = t < p.stun ? Math.sin(t / 40) * 0.25 : 0;
     }
+    van.mesh.position.set(van.x, 0, van.z); van.mesh.rotation.y = van.r;
+    for (const r of this.remotes.values()) {
+      const k = Math.min(1, dt * 10); r.x += (r.tx - r.x) * k; r.z += (r.tz - r.z) * k;
+      let dr = r.tr - r.r; dr = Math.atan2(Math.sin(dr), Math.cos(dr)); r.r += dr * k;
+      r.wolf.g.visible = r.seen && !r.inVan; r.van.visible = r.seen && r.inVan;
+      r.wolf.g.position.set(r.x, 0, r.z); r.wolf.body.rotation.y = r.r; r.van.position.set(r.x, 0, r.z); r.van.rotation.y = r.r;
+    }
+    for (const b of this.bugs) { b.mesh.g.position.set(b.x, 0, b.z); b.mesh.g.rotation.y = b.a; b.mesh.body.position.y = 1.1 + Math.abs(Math.sin(t / 90 + b.x)) * 0.3; }
+    for (const d of this.drones) { d.mesh.g.position.set(d.x, Math.sin(t / 250 + d.x) * 0.3, d.z); d.mesh.halo.rotation.z = t / 200; d.mesh.body.rotation.y = t / 300; }
+    for (const c of this.customers) c.mesh.body.position.y = Math.abs(Math.sin(t / 220 + c.x)) * 0.5;
+    for (const o of Object.values(this.offers)) o.beacon.ring.rotation.z = t / 600;
+    for (const s of this.world.stores) { s.pin.rotation.y = t / 900 + s.x; }
+    const me = this.pos();
+    if (this.page.visible) { this.page.position.set(me.x, p.inVan ? 4.6 : 4.2, me.z); this.page.rotation.y = t / 400; }
 
-    const pack = mapPack(G.v);
-    this.world.stores.forEach((s, i) => {
-      const v = G.v[i], o = ownerOf(v), col = o < 0 ? 0x8892b0 : TEAMS[o].color;
-      s.bar.scale.x = Math.max(0.001, Math.abs(v) / 100); s.bar.material.color.setHex(v === 0 ? 0x8892b0 : TEAMS[v > 0 ? 0 : 1].color);
-      s.pin.material.color.setHex(col); s.pin.material.emissive.setHex(o < 0 ? 0x222a44 : col); s.pin.material.emissiveIntensity = 0.5;
-      s.pin.rotation.y = t / 900 + i; s.pin.position.y = 9.2 + Math.sin(t / 500 + i) * 0.25;
-      const rank = pack.findIndex((p) => p.i === i);
-      s.badges.forEach((b, n) => { b.visible = n === rank; });
-      const spam = G.spam && G.spam.i === i;
-      s.spam.visible = !!spam; if (spam) { s.issueLabels.forEach((l, n) => { l.visible = n === G.spam.kind; }); s.spam.rotation.y = t / 300; s.spam.scale.setScalar(0.6 + 0.4 * (G.spam.hp / SPAM_HP)); }
-    });
-    this.world.pads.forEach((p, i) => {
-      const type = G.pads[i];
-      if (type !== p.type) {
-        p.type = type; p.gem.visible = !!type; for (const k in p.labels) p.labels[k].visible = +k === type;
-        if (type) { p.gem.material.color.setHex(PICKUPS[type].color); p.ring.material.color.setHex(PICKUPS[type].color); } else p.ring.material.color.setHex(0x8892b0);
-      }
-      p.gem.rotation.y = t / 400; p.gem.position.y = 1.5 + Math.sin(t / 300 + i) * 0.2;
-    });
-    this.world.statue.rotation.y = t / 4000;
+    const tg = this.playing && this.S.phase === 'shift' ? this.target() : null;
+    this.arrow.visible = !!tg && tg.d > 7;
+    if (tg) { this.arrow.position.set(me.x, 0.2, me.z); this.arrow.rotation.y = Math.atan2(tg.x - me.x, tg.z - me.z); this.arrow.scale.setScalar(p.inVan ? 1.5 : 1); }
 
     for (let i = this.fx.length - 1; i >= 0; i--) {
       const f = this.fx[i]; f.t += dt; const k = f.t / f.dur;
-      f.mesh.scale.setScalar(1 + k * f.grow); f.mesh.material.opacity = 1 - k;
+      if (f.rise) { f.mesh.position.y = 2 + k * f.rise; f.mesh.rotation.z += dt * 8; }
+      else { f.mesh.scale.setScalar(1 + k * f.grow); f.mesh.material.opacity = 1 - k; }
       if (k >= 1) { this.scene.remove(f.mesh); this.fx.splice(i, 1); }
     }
 
     // camera
-    if (this.playing && this.my) {
-      const s = this.camScale, w = this.my;
-      this.tmp.set(clamp(w.x, -34, 34), 40 * s, clamp(w.z, -26, 26) + 25 * s);
-      this.camera.position.lerp(this.tmp, Math.min(1, dt * 6));
-      this.camera.lookAt(this.camera.position.x, 0, this.camera.position.z - 25 * s - 3);
+    if (this.playing) {
+      const c = this.cam, lead = p.inVan ? 0.35 : 0;
+      c.s += ((p.inVan ? 1.3 : 1) * this.camScale - c.s) * Math.min(1, dt * 3);
+      c.x += (me.x + van.vx * lead - c.x) * Math.min(1, dt * 5); c.z += (me.z + van.vz * lead - c.z) * Math.min(1, dt * 5);
+      this.camera.position.set(c.x, 42 * c.s, c.z + 24 * c.s); this.camera.lookAt(c.x, 0, c.z - 3);
     } else {
-      this.attract += dt * 0.12;
-      this.camera.position.set(Math.sin(this.attract) * 34, 30, 56 + Math.cos(this.attract) * 6);
-      this.camera.lookAt(0, 8, -22);
+      this.attract += dt * 0.1;
+      this.camera.position.set(Math.sin(this.attract) * 46, 46, 74 + Math.cos(this.attract) * 8); this.camera.lookAt(0, 4, -30);
     }
     this.renderer.render(this.scene, this.camera);
-
-    if (this.playing) {
-      this.ui.hud(G, pack, this.my, { howl: clamp((this.howlAt - t) / HOWL_CD, 0, 1), photos: t < this.buffs.photos, cats: t < this.buffs.cats, shield: t < this.buffs.shield });
-      if (G.ph === 'end' && !this.shownEnd) { this.shownEnd = true; this.sfx.capture(); this.ui.results(G, this.my, this.stats); }
-    }
+    if (this.playing) this.ui.hud(this, tg, clamp((this.howlAt - t) / HOWL_CD, 0, 1));
   }
-
-  start() { this.playing = true; }
 }
