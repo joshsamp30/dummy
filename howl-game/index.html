@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Map Pack Showdown | Local Howl</title>
+<meta name="description" content="A 3D multiplayer game from Local Howl. Join a wolf pack, win reviews and take the Map Pack.">
+<meta property="og:title" content="Map Pack Showdown | Local Howl">
+<meta property="og:description" content="Join a wolf pack. Win reviews. Take the Map Pack. Plays in your browser.">
+<meta name="theme-color" content="#0f172a">
+<link rel="icon" href="assets/pin_white.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<!-- Netlify Forms fallback for the email gate -->
+<form name="howl-leads" data-netlify="true" netlify-honeypot="bot-field" hidden>
+  <input name="bot-field"><input name="name"><input name="email"><input name="room">
+</form>
+
+<section id="gate" class="screen">
+  <div class="card">
+    <img class="logo" src="assets/logo_white.png" alt="Local Howl">
+    <h1>Map Pack <span>Showdown</span></h1>
+    <p class="lede">Join a wolf pack. Win reviews. Take the top 3.</p>
+    <form id="gateForm" novalidate>
+      <label>Your name<input id="fName" name="name" autocomplete="given-name" maxlength="16" required placeholder="Alpha"></label>
+      <label>Email<input id="fEmail" name="email" type="email" autocomplete="email" inputmode="email" required placeholder="you@business.com"></label>
+      <p id="gateErr" class="err" role="alert"></p>
+      <button class="btn" type="submit">Unlock the game</button>
+      <p class="fine">We save your name and email. Local Howl may send you local SEO tips. Unsubscribe any time.</p>
+    </form>
+  </div>
+</section>
+
+<section id="menu" class="screen" hidden>
+  <div class="card">
+    <img class="logo" src="assets/logo_white.png" alt="Local Howl">
+    <h1>Map Pack <span>Showdown</span></h1>
+    <ol class="how">
+      <li><b>Shoot reviews</b> at storefronts to rank them for your pack.</li>
+      <li><b>The top 3 are the Map Pack.</b> They pay triple leads.</li>
+      <li><b>Howl</b> to stun rivals. <b>Report spam</b> listings. Most leads wins.</li>
+    </ol>
+    <p class="keys desk">WASD move. Mouse aim. Click shoot. Space howl.</p>
+    <p class="keys touch">Left thumb moves. Right thumb aims and shoots.</p>
+    <button id="btnPlay" class="btn">Play now</button>
+    <button id="btnShare" class="btn ghost">Copy invite link</button>
+    <p id="roomInfo" class="fine"></p>
+  </div>
+</section>
+
+<div id="hud" hidden>
+  <div id="top">
+    <div class="score t0"><b id="sc0">0</b><span>Night Pack</span></div>
+    <div id="clock">2:30</div>
+    <div class="score t1"><b id="sc1">0</b><span>Dawn Pack</span></div>
+  </div>
+  <div id="pack">
+    <h2>near me <i>Map Pack</i></h2>
+    <ol id="packList"></ol>
+  </div>
+  <div id="feed"></div>
+  <div id="banner"></div>
+  <div id="fact"><b>Local SEO tip</b><span id="factText"></span></div>
+  <div id="status">
+    <div id="hp"></div>
+    <div id="buff"></div>
+  </div>
+  <button id="btnHowl" aria-label="Howl"><span>HOWL</span></button>
+  <button id="btnInvite" aria-label="Copy invite link">Invite</button>
+  <div id="stickL" class="stick"><i></i></div>
+  <div id="stickR" class="stick"><i></i></div>
+  <div id="flash"></div>
+</div>
+
+<section id="results" class="screen" hidden>
+  <div class="card">
+    <h1 id="resTitle"></h1>
+    <p id="resScore" class="lede"></p>
+    <ul id="resStats" class="stats"></ul>
+    <h3>What just happened is real</h3>
+    <ul class="learn">
+      <li>Reviews, relevance, distance and prominence decide local rankings.</li>
+      <li>The top 3 Map Pack spots take most of the leads.</li>
+      <li>Spam listings steal leads. Reporting them works.</li>
+    </ul>
+    <a id="cta" class="btn" target="_blank" rel="noopener">Get your business in the real Map Pack</a>
+    <p id="resNext" class="fine"></p>
+  </div>
+</section>
+
+<script src="vendor/supabase.js"></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
