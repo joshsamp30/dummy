@@ -45,9 +45,9 @@
     <p class="eyebrow">Your first shift at Local Howl</p>
     <h1>Put this town <span>on the map.</span></h1>
     <ol class="how">
-      <li><b>Take jobs.</b> Roam the town on foot or in the van. Drive into a beam to start.</li>
-      <li><b>Fix sites. Get reviews. Publish pages.</b> Every job moves that client up the rankings.</li>
-      <li><b>Fill the Map Pack.</b> Top 3 clients pay leads every second. Dodge the spam bots.</li>
+      <li><b>Take real client problems.</b> Roam the town on foot or in the van. Drive into a beam to start.</li>
+      <li><b>Do the work. Make the call.</b> Fix sites, earn reviews, publish pages. Each job has one real SEO decision.</li>
+      <li><b>Fill the Map Pack.</b> Right calls rank clients faster. Top 3 pay leads every second.</li>
     </ol>
     <p class="keys desk">WASD or drag to move. Space for the van. Q to howl. Aiming is automatic.</p>
     <p class="keys touch">Drag anywhere to move. Two buttons. Aiming is automatic.</p>
@@ -83,6 +83,10 @@
   <div id="flash"></div>
 </div>
 
+<section id="card" class="screen" hidden>
+  <div class="card"><div id="cardBody"></div></div>
+</section>
+
 <section id="results" class="screen" hidden>
   <div class="card">
     <p class="eyebrow">Shift report</p>
@@ -90,12 +94,8 @@
     <p id="resScore" class="lede"></p>
     <ul id="resStats" class="stats"></ul>
     <ol id="resBoard" class="board"></ol>
-    <h3>Less talk. More proof.</h3>
-    <ul class="learn">
-      <li><b>Technical fixes.</b> A broken, slow or blocked page cannot earn its ranking.</li>
-      <li><b>Reviews.</b> More reviews and better ratings can lift local ranking.</li>
-      <li><b>New pages.</b> Each service and each area needs its own page to rank.</li>
-    </ul>
+    <h3 id="resLearnHead">What you learned this shift</h3>
+    <ul id="resLearn" class="learn"></ul>
     <a id="cta" class="btn" target="_blank" rel="noopener">Get on the real Map Pack</a>
     <button id="btnAgain" class="btn ghost">Run another shift</button>
   </div>

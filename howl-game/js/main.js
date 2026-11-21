@@ -1,5 +1,5 @@
 // Bootstrap: email gate, menu, one-stick input, HUD, minimap, sound.
-import { CONFIG, JOBS } from './config.js';
+import { CONFIG, JOBS, FACTS } from './config.js';
 import { createNet, saveLead } from './net.js';
 import { Game } from './game.js';
 
@@ -107,7 +107,7 @@ const ui = (() => {
       set('heat', [1, 2, 3].map((n) => `<i class="${n <= S.heat ? 'hot' : ''}"></i>`).join(''));
       $('clock').classList.toggle('low', S.tl < 20);
       if (m) {
-        const prog = m.type === 'page' ? (m.stage === 0 ? 'Pick up the ' + m.pageName + ' at HQ' : m.hold > 0 ? 'Publishing...' : 'Deliver the ' + m.pageName) : `${m.job.goal} ${m.got}/${m.need}`;
+        const prog = m.type === 'page' ? (m.stage === 0 ? 'Go to HQ and choose the page' : m.hold > 0 ? 'Publishing...' : 'Deliver the ' + m.pageName) : `${m.job.goal} ${m.got}/${m.need}`;
         set('job', `<b style="background:${m.job.css}">${m.job.label}</b><span>${esc(m.store.def.name)}. ${prog}</span><em>${fmt(Math.max(0, m.tl))}${tg && tg.d > 7 ? ' · ' + Math.round(tg.d) + ' m' : ''}</em>`);
       } else set('job', `<b>PICK A JOB</b><span>Follow the arrow to a client.</span><em>${tg ? Math.round(tg.d) + ' m' : ''}</em>`);
       const top = [...g.world.stores].sort((a, b) => a.rank - b.rank).slice(0, 3);
@@ -127,13 +127,53 @@ const ui = (() => {
       const f = $('feed'); f.prepend(d); while (f.children.length > 3) f.lastChild.remove();
       setTimeout(() => d.remove(), 5000);
     },
+    // Decision and report card. Options answer with a tap or keys 1 to 3. Enter or Space continues.
+    card(o) {
+      const el = $('card'), body = $('cardBody'); let answered = !o.q;
+      const reveal = (picked) => {
+        const right = picked === o.a;
+        let h = '';
+        if (o.q) h += `<p class="verdict ${right ? 'ok' : 'no'}">${right ? `Smart call. +${o.bonus} leads.` : 'Not quite. The right call: ' + esc(o.opts[o.a]) + '.'}</p>`;
+        if (o.why) h += `<h4>Why it works</h4><p>${esc(o.why)}</p>`;
+        if (o.note) h += `<p class="note">${esc(o.note)}</p>`;
+        if (o.result) h += `<p class="result">${esc(o.result)}</p>`;
+        $('cardAfter').innerHTML = h + '<button class="btn" id="cardGo">Back to work</button>';
+        $('cardGo').addEventListener('click', close);
+      };
+      const close = () => { el.hidden = true; removeEventListener('keydown', onKey, true); o.onClose && o.onClose(); };
+      const answer = (i) => {
+        if (answered) return; answered = true;
+        body.querySelectorAll('.opt').forEach((b, n) => { b.disabled = true; b.classList.add(n === o.a ? 'right' : n === i ? 'wrong' : 'dim'); });
+        o.onAnswer && o.onAnswer(i); reveal(i);
+      };
+      const onKey = (e) => {
+        if (el.hidden) return;
+        const n = parseInt(e.key, 10);
+        if (!answered && n >= 1 && n <= (o.opts || []).length) answer(n - 1);
+        else if (answered && (e.key === 'Enter' || e.key === ' ')) close();
+        e.stopPropagation(); e.preventDefault();
+      };
+      let h = `<b class="tag" style="background:${o.color}">${o.tag}</b><h2>${esc(o.title)}</h2>`;
+      if (o.quote) h += `<p class="quote">"${esc(o.quote)}"</p>`;
+      if (o.did && o.did.length) h += `<h4>${esc(o.didHead)}</h4><ul class="did">${o.did.map((d) => `<li>${esc(d)}</li>`).join('')}</ul>`;
+      if (o.q) h += `<h4>Your call</h4><p class="q">${esc(o.q)}</p>` + o.opts.map((t, i) => `<button class="opt" data-i="${i}"><i>${i + 1}</i>${esc(t)}</button>`).join('');
+      body.innerHTML = h + '<div id="cardAfter"></div>';
+      body.querySelectorAll('.opt').forEach((b) => b.addEventListener('click', () => answer(+b.dataset.i)));
+      if (!o.q) reveal(-1);
+      el.hidden = false; el.scrollTop = 0; addEventListener('keydown', onKey, true);
+      this._closeCard = () => { el.hidden = true; removeEventListener('keydown', onKey, true); };
+    },
+    closeCard() { if (this._closeCard) this._closeCard(); },
     flash() { const f = $('flash'); f.classList.add('on'); setTimeout(() => f.classList.remove('on'), 80); },
     results(S, pack, board) {
       const jobs = S.jobs.fix + S.jobs.reviews + S.jobs.page, leads = Math.round(S.leads);
       const title = pack >= 3 ? ['You own', 'the Map Pack.'] : pack > 0 ? ['Clients are', 'getting found.'] : jobs > 0 ? ['Good start.', 'Keep climbing.'] : ['Shift over.', 'Take a job next time.'];
       $('resTitle').innerHTML = `${title[0]}<span>${title[1]}</span>`;
       $('resScore').textContent = `${leads} leads generated. ${pack} of 3 Map Pack spots filled.`;
-      $('resStats').innerHTML = [['Site fixes', S.jobs.fix], ['Review jobs', S.jobs.reviews], ['New pages', S.jobs.page], ['Map Pack', pack]].map(([l, v]) => `<li><b>${v}</b>${l}</li>`).join('');
+      const learned = S.learned.length ? S.learned.slice(-4) : [FACTS.web, FACTS.pack];
+      $('resLearn').innerHTML = learned.map((t) => `<li>${esc(t)}</li>`).join('');
+      $('resLearnHead').textContent = S.learned.length ? 'What you learned this shift' : 'Start here next shift';
+      $('resStats').innerHTML = [['Site fixes', S.jobs.fix], ['Review jobs', S.jobs.reviews], ['New pages', S.jobs.page], ['Smart calls', `${S.smart}/${S.asked}`]].map(([l, v]) => `<li><b>${v}</b>${l}</li>`).join('');
       $('resBoard').innerHTML = board.length > 1 ? board.slice(0, 5).map((r, i) => `<li class="${r.me ? 'me' : ''}"><span>${i + 1}. ${esc(r.name)}</span><b>${r.leads}</b></li>`).join('') : '';
       $('results').hidden = false;
     },

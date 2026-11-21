@@ -10,6 +10,8 @@ An open town and a 3 minute shift, built around one player.
 - Three jobs are always on the map: Fix Site, Get Reviews, New Page. Enter a beam to start one.
 - Each finished job moves that client up the rankings. Rank 3 or better is the Map Pack.
 - Map Pack clients pay leads every second. Fill all 3 spots.
+- Every job is a real client scenario with one SEO decision. A wrong call earns a weaker ranking gain.
+- Each action names the real fix. A job report explains what was done and why it works. The clock pauses while you read.
 - Finished jobs raise spam heat. Spam bots hunt you and steal leads. Howl clears them.
 
 ## Stack

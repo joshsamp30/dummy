@@ -1,7 +1,7 @@
 // Local Howl: Map Pack Showdown. An open-town shift, built around one player.
 // Every client runs its own shift. The network only shares where players are and their lead count.
 import * as THREE from '../vendor/three.module.min.js';
-import { CONFIG, COLORS, JOBS, ISSUES, FACTS } from './config.js';
+import { CONFIG, COLORS, JOBS, ISSUES, ASKS, BONUS, FACTS } from './config.js';
 import { buildWorld, makeWolf, makeVan, makeCar, makeBug, makeDrone, makeBeacon, makePage, makeArrow, makeRing, makeStar, colliders, BOUNDS, ROADS } from './world.js';
 
 const FOOT = 10.5, VAN_MAX = 27, R_FOOT = 0.8, R_VAN = 2.0;
@@ -74,6 +74,7 @@ export class Game {
     this.wolf = null; // created on start, once the player has a name
     this.arrow = makeArrow(); this.arrow.visible = false; this.scene.add(this.arrow);
     this.page = makePage(); this.page.visible = false; this.scene.add(this.page);
+    this.paused = false; this.scnAt = { fix: 0, reviews: 0, page: 0 };
     this.fireAt = 0; this.howlAt = 0; this.sendAt = 0; this.secAt = 0; this.callAt = 0; this.droneAt = 0; this.action = '';
     this.tmp = new THREE.Vector3(); this.cam = { x: 0, z: 0, s: 1 };
     this.initTraffic(); this.placeAtHQ();
@@ -127,14 +128,15 @@ export class Game {
   startShift() {
     this.clearJob(); for (const d of this.drones) this.scene.remove(d.mesh.g); this.drones = [];
     for (const k in this.offers) this.dropOffer(k);
-    this.S = { phase: 'shift', tl: CONFIG.SHIFT_SECONDS, leads: 0, jobs: { fix: 0, reviews: 0, page: 0 }, heat: 0, heatT: 0, stolen: 0 };
+    this.S = { phase: 'shift', tl: CONFIG.SHIFT_SECONDS, leads: 0, jobs: { fix: 0, reviews: 0, page: 0 }, heat: 0, heatT: 0, stolen: 0, asked: 0, smart: 0, learned: [] };
+    this.paused = false; this.ui.closeCard();
     this.world.stores.forEach((s) => s.setRank(9 + Math.floor(Math.random() * 7)));
     this.placeAtHQ(); this.pending = []; this.howlAt = 0; this.secAt = now() + 1000;
     for (const k of Object.keys(JOBS)) this.spawnOffer(k);
     this.ui.hideResults(); this.ui.banner('Shift started. Pick a job.', 2200);
   }
   endShift() {
-    this.S.phase = 'done'; this.clearJob();
+    this.S.phase = 'done'; this.clearJob(); this.paused = false; this.ui.closeCard();
     for (const d of this.drones) this.scene.remove(d.mesh.g); this.drones = [];
     this.sfx.capture(); this.ui.results(this.S, this.packCount(), this.board());
   }
@@ -156,12 +158,13 @@ export class Game {
 
   startJob(o) {
     const job = JOBS[o.type], z = o.store.zone;
-    const m = this.mission = { type: o.type, store: o.store, job, tl: job.seconds, need: job.need, got: 0, stage: 0, hold: 0, beacon: null };
+    const scn = job.scenarios[this.scnAt[o.type]++ % job.scenarios.length];
+    const m = this.mission = { type: o.type, store: o.store, job, scn, tl: job.seconds, need: job.need, got: 0, stage: 0, hold: 0, beacon: null, did: [], correct: null };
     this.dropOffer(o.type);
     if (o.type === 'fix') {
       for (let i = 0; i < m.need; i++) {
-        const label = ISSUES[(i + Math.floor(Math.random() * 3)) % ISSUES.length], mesh = makeBug(label);
-        const b = { x: z.x + rand(-9, 9), z: z.z + rand(-4, 4), hp: 3, a: rand(0, 6.28), turnAt: 0, mesh, bug: true }; collide(b, 1);
+        const issue = ISSUES[(i + this.scnAt.fix) % ISSUES.length], mesh = makeBug(issue.label);
+        const b = { issue, x: z.x + rand(-9, 9), z: z.z + rand(-4, 4), hp: 3, a: rand(0, 6.28), turnAt: 0, mesh, bug: true }; collide(b, 1);
         this.scene.add(mesh.g); this.bugs.push(b);
       }
     } else if (o.type === 'reviews') {
@@ -171,10 +174,10 @@ export class Game {
         this.customers.push({ x: pt.x, z: pt.z, mesh });
       }
     } else {
-      m.pageName = pick(job.pages); this.setBeacon(this.world.hq.zone, 'PICK UP ' + m.pageName.toUpperCase());
+      m.pageName = 'page'; this.setBeacon(this.world.hq.zone, 'CHOOSE THE PAGE AT HQ');
     }
     this.sfx.pickup();
-    this.ui.brief(o.store.def.name, pick(job.brief), job.label, job.css);
+    this.ui.brief(o.store.def.name, scn.quote, job.label, job.css);
   }
   setBeacon(pt, label) {
     const m = this.mission; if (m.beacon) this.scene.remove(m.beacon.g);
@@ -186,19 +189,40 @@ export class Game {
     if (this.mission && this.mission.beacon) this.scene.remove(this.mission.beacon.g);
     this.page.visible = false; this.mission = null;
   }
+  // A decision card. The shift clock stops while it is open.
+  decide(m, head, onPick, extra = {}) {
+    const S = this.S, scn = m.scn; this.paused = true;
+    this.ui.card({ tag: m.job.label, color: m.job.css, ...head, q: scn.q, opts: scn.opts, a: scn.a, why: scn.why, bonus: BONUS, ...extra,
+      onAnswer: (i) => {
+        m.correct = i === scn.a; S.asked++;
+        if (m.correct) { S.smart++; S.leads += BONUS; this.sfx.capture(); } else this.sfx.hurt();
+        if (!S.learned.includes(scn.why)) S.learned.push(scn.why);
+        if (onPick) onPick(i);
+      },
+      onClose: () => { this.paused = false; this.input.act = this.input.howl = false; this.last = now(); },
+    });
+  }
   finishJob(won) {
     const m = this.mission, S = this.S, type = m.type;
     if (won) {
       const reward = 100 + Math.round(m.tl * 2), before = m.store.rank, was = this.packCount();
+      // A wrong page still gets published. It just does not solve the client's problem.
+      const gain = type === 'page' && m.correct === false ? 1 : 3 + Math.floor(Math.random() * 3);
       S.leads += reward; S.jobs[type]++;
-      m.store.setRank(Math.max(1, before - 3 - Math.floor(Math.random() * 3)));
-      S.heat = Math.min(3, S.heat + 1); S.heatT = 24; this.droneAt = now() + 2500;
+      m.store.setRank(Math.max(1, before - gain));
+      S.heat = Math.min(3, S.heat + 1); S.heatT = 24; this.droneAt = now() + 5000;
       this.sfx.capture(); this.ring(m.store.zone.x, m.store.zone.z, m.job.color, 12, 0.7);
-      this.ui.banner(`Job done. +${reward} leads`, 2400);
       this.ui.feed(`${m.store.def.name}: rank #${before} to #${m.store.rank}`, m.job.css);
-      if (this.packCount() > was) { this.ui.feed(`${m.store.def.name} is in the Map Pack. +3 leads a second.`, '#fff078'); this.ui.fact(FACTS.pack); }
-      else this.ui.fact(pick(m.job.facts));
-      if (S.heat === 1 && S.jobs.fix + S.jobs.reviews + S.jobs.page === 1) this.pending.push({ at: now() + 6500, fn: () => this.ui.fact(FACTS.heat) });
+      const inPack = this.packCount() > was;
+      const report = { title: m.store.def.name, didHead: m.job.did, did: [...new Set(m.did)],
+        result: `Rank #${before} to #${m.store.rank}. +${reward} leads.` + (inPack ? ' Now in the Map Pack. +3 leads a second.' : ''),
+        note: inPack ? FACTS.pack : type === 'page' && m.correct === false ? `The page went live but it was the wrong fix, so the ranking barely moved. ${m.scn.why}` : null };
+      if (type === 'page') {
+        this.paused = true;
+        this.ui.card({ tag: m.job.label, color: m.job.css, ...report, why: m.correct === false ? null : m.scn.why,
+          onClose: () => { this.paused = false; this.input.act = this.input.howl = false; this.last = now(); } });
+      } else this.decide(m, report, null);
+      if (S.heat === 1 && S.jobs.fix + S.jobs.reviews + S.jobs.page === 1) this.pending.push({ at: now() + 9000, fn: () => this.ui.fact(FACTS.heat) });
     } else {
       this.sfx.hurt(); this.ui.banner('Out of time. Client still invisible.', 2400);
     }
@@ -224,7 +248,10 @@ export class Game {
 
   kill(e) {
     this.ring(e.x, e.z, 0xff5252, 3, 0.3); this.scene.remove(e.mesh.g); this.sfx.hit();
-    if (e.bug) { this.bugs.splice(this.bugs.indexOf(e), 1); if (this.mission) this.mission.got++; }
+    if (e.bug) {
+      this.bugs.splice(this.bugs.indexOf(e), 1);
+      if (this.mission) { this.mission.got++; this.mission.did.push(`${e.issue.label}. ${e.issue.fix}`); this.ui.feed(`${e.issue.label} fixed. ${e.issue.fix}`, '#ff5252'); }
+    }
     else this.drones.splice(this.drones.indexOf(e), 1);
   }
 
@@ -309,12 +336,18 @@ export class Game {
           const c = this.customers[i];
           if (dist(me.x, me.z, c.x, c.z) < (p.inVan ? 5 : 3.4)) {
             this.starUp(c.x, c.z); this.scene.remove(c.mesh.g); this.customers.splice(i, 1); m.got++; this.sfx.capture();
-            this.ui.feed(pick(['★★★★★ "Showed up on time."', '★★★★★ "Fixed it first visit."', '★★★★★ "Would call again."', '★★★★★ "Fair price. Great work."']), '#fff078');
+            const ask = ASKS[m.got % ASKS.length]; m.did.push(ask); this.ui.feed('★ Review earned. ' + ask, '#fff078');
           }
         }
       } else if (m.type === 'page') {
         const near = dist(me.x, me.z, m.point.x, m.point.z) < ZONE;
-        if (m.stage === 0 && near) { m.stage = 1; this.sfx.pickup(); this.setBeacon(m.store.zone, 'PUBLISH HERE'); this.ui.banner(m.pageName + ' picked up. Deliver it.', 1800); }
+        if (m.stage === 0 && near) {
+          m.stage = 1; this.sfx.pickup(); this.van.vx = this.van.vz = 0;
+          this.decide(m, { title: m.store.def.name, quote: m.scn.quote }, (i) => {
+            m.pageName = m.scn.opts[i]; m.did.push(`A ${m.pageName} for ${m.store.def.name}.`);
+            this.setBeacon(m.store.zone, 'PUBLISH ' + m.pageName.toUpperCase());
+          });
+        }
         else if (m.stage === 1) { m.hold = near ? m.hold + dt : 0; if (m.hold >= 1.2) m.got = 1; }
         this.page.visible = m.stage === 1;
       }
@@ -391,7 +424,7 @@ export class Game {
     const t = now(), dt = Math.min(0.05, (t - this.last) / 1000); this.last = t;
     const p = this.p, van = this.van;
     this.updateTraffic(dt);
-    if (this.playing && this.S.phase === 'shift') this.tick(dt);
+    if (this.playing && this.S.phase === 'shift' && !this.paused) this.tick(dt);
 
     if (this.wolf) {
       const w = this.wolf; w.g.visible = !p.inVan; w.g.position.set(p.x, 0, p.z); w.body.rotation.y = p.r;

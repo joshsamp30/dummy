@@ -142,3 +142,20 @@ input:focus { outline: 3px solid var(--yellow); outline-offset: 0; }
   #fact { top: auto; bottom: 8px; width: 40%; } .polaroid { display: none; }
   #btnAct { width: 88px; height: 88px; } #btnHowl { right: calc(118px + env(safe-area-inset-right)); }
 }
+
+/* ---------- decision and report card ---------- */
+#card { z-index: 30; background: rgba(8,9,8,.72); }
+#card .tag { display: inline-block; font: 700 11px var(--mono); letter-spacing: .1em; padding: 4px 8px; color: var(--ink); }
+#card h2 { margin: 8px 0 4px; font-size: 22px; letter-spacing: -.02em; }
+#card h4 { margin: 14px 0 4px; font: 11px var(--mono); color: var(--blue); text-transform: uppercase; letter-spacing: .12em; }
+#card p { margin: 0 0 6px; font-size: 14px; line-height: 1.45; }
+#card .quote { font-family: var(--serif); font-style: italic; font-size: 18px; line-height: 1.25; color: var(--blue); }
+#card .q { font-weight: 600; font-size: 15px; }
+#card .did { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.45; color: #3a3a36; }
+.opt { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 7px; padding: 12px; background: #fff; border: 1.5px solid var(--ink); font: 600 14px Poppins, sans-serif; color: var(--ink); text-align: left; cursor: pointer; }
+.opt i { flex: none; width: 22px; height: 22px; display: grid; place-items: center; background: var(--ink); color: #fff; font: 700 11px var(--mono); font-style: normal; }
+.opt:not(:disabled):hover { background: var(--yellow); }
+.opt.right { background: #c9f2dc; border-color: #1a7f4b; } .opt.wrong { background: #ffd9d9; border-color: #c81e1e; } .opt.dim { opacity: .45; }
+.verdict { margin-top: 12px !important; font-weight: 700; } .verdict.ok { color: #1a7f4b; } .verdict.no { color: #c81e1e; }
+#card .note { background: var(--yellow); padding: 8px 10px; }
+#card .result { font: 700 13px var(--mono); border-top: 1.5px solid var(--ink); padding-top: 8px; margin-top: 10px; }
