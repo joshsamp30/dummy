@@ -7,8 +7,9 @@ A 3D multiplayer browser game from Local Howl. Two wolf packs fight for the loca
 - Shoot review stars at storefronts to rank them for your pack.
 - The top 3 listings are the Map Pack. They pay triple leads.
 - Howl stuns rivals and boosts nearby listings. 12 second cooldown.
-- Pickups are real ranking levers: Photos, Categories, Review Replies, Citations.
-- Spam listings spawn. Shoot them to report them. Rounds last 2:30.
+- Technical site issues (404, slow page, no HTTPS and more) break a storefront. Shoot the warning to fix it.
+- Floating pages are new website pages: Service, FAQ, About, Location. Each pays leads and gives a boost.
+- Rounds last 2:30.
 
 ## Stack
 

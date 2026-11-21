@@ -1,8 +1,8 @@
 // Map Pack Showdown: simulation, netcode and rendering.
 // Model: each client owns its own wolf and its own shots. One client is host (earliest joiner)
-// and owns shared state: listings, spam, pickups, bots, the clock and the score.
+// and owns shared state: listings, site issues, page pickups, bots, the clock and the score.
 import * as THREE from '../vendor/three.module.min.js';
-import { CONFIG, TEAMS, STORES, PICKUPS, FACTS, BOT_NAMES } from './config.js';
+import { CONFIG, TEAMS, STORES, PICKUPS, PAGE_LEADS, ISSUES, FACTS, BOT_NAMES } from './config.js';
 import { buildWorld, makeWolf, makeStar, makeHowlRing, colliders, BOUNDS } from './world.js';
 
 const SPEED = 11, BOT_SPEED = 8.5, RADIUS = 0.8;
@@ -69,7 +69,7 @@ export class Game {
     this.renderer.setAnimationLoop(() => this.frame());
   }
 
-  freshStats() { return { reviews: 0, captures: 0, reports: 0, tags: 0 }; }
+  freshStats() { return { reviews: 0, captures: 0, fixes: 0, pages: 0 }; }
 
   resize() {
     const w = innerWidth, h = innerHeight;
@@ -125,7 +125,7 @@ export class Game {
       case 'g': if (this.isHost) this.grantPad(m.pad, m.id); break;
       case 'gv': this.onGrant(m); break;
       case 'e': this.onEvent(m); break;
-      case 'k': this.ui.feed(`${this.nameOf(m.by)} sent ${this.nameOf(m.id)} back to the den`); if (m.by === this.me.id) this.stats.tags++; break;
+      case 'k': this.ui.feed(`${this.nameOf(m.by)} sent ${this.nameOf(m.id)} back to the den`); break;
       case 'st': if (!this.isHost) this.onSnapshot(m); break;
     }
   }
@@ -218,7 +218,7 @@ export class Game {
     if (p.key === 'photos') this.buffs.photos = t;
     if (p.key === 'cats') this.buffs.cats = t;
     if (p.key === 'reply') { this.my.hp = MAX_HP; this.buffs.shield = now() + 6000; }
-    this.sfx.pickup(); this.ui.buff(p.label, p.buff); this.fact(p.fact, true);
+    this.stats.pages++; this.sfx.pickup(); this.ui.buff(p.label, p.buff); this.fact(p.fact, true);
   }
 
   // ---------- events and facts ----------
@@ -228,10 +228,10 @@ export class Game {
       this.ui.feed(`${this.nameOf(m.by)} ranked ${s.name} for ${TEAMS[m.team].name}`, TEAMS[m.team].css);
       if (m.by === this.me.id) { this.stats.captures++; this.sfx.capture(); this.fact(pick(FACTS.capture)); }
     } else if (m.k === 'spam') {
-      this.ui.feed(`Spam listing hit ${STORES[m.i].name}. Shoot it to report it.`, '#ff6b6b'); this.fact(FACTS.spam);
+      this.ui.feed(`${ISSUES[m.kind].label} at ${STORES[m.i].name}. Shoot it to fix it.`, '#ff6b6b'); this.fact(ISSUES[m.kind].fact);
     } else if (m.k === 'report') {
-      this.ui.feed(`${this.nameOf(m.by)} reported the spam. +15 leads for ${TEAMS[m.team].name}`, TEAMS[m.team].css);
-      if (m.by === this.me.id) { this.stats.reports++; this.sfx.capture(); this.fact(FACTS.report, true); }
+      this.ui.feed(`${this.nameOf(m.by)} fixed the site issue. +15 leads for ${TEAMS[m.team].name}`, TEAMS[m.team].css);
+      if (m.by === this.me.id) { this.stats.fixes++; this.sfx.capture(); this.fact(FACTS.fixed, true); }
     }
   }
   fact(text, force) {
@@ -247,7 +247,7 @@ export class Game {
   // ---------- host ----------
   becomeHost() {
     const G = this.G;
-    this.H = { spamAt: now() + 20000, padAt: G.pads.map(() => now() + 4000), secAt: now() + 1000, snapAt: 0, phaseEnd: 0, prevOwner: G.v.map(ownerOf) };
+    this.H = { spamAt: now() + 12000, padAt: G.pads.map(() => now() + 4000), secAt: now() + 1000, snapAt: 0, phaseEnd: 0, prevOwner: G.v.map(ownerOf) };
     if (G.ph === 'wait') this.hostPhase('count', 5);
     else this.H.phaseEnd = now() + G.tl * 1000;
   }
@@ -256,7 +256,7 @@ export class Game {
     G.ph = ph; G.tl = secs; H.phaseEnd = now() + secs * 1000;
     if (ph === 'count') {
       G.round++; G.v = STORES.map(() => 0); G.sc = [0, 0]; G.spam = null; G.pads = G.pads.map(() => 0);
-      H.prevOwner = G.v.map(() => -1); H.spamAt = now() + 25000; H.padAt = G.pads.map(() => now() + 9000);
+      H.prevOwner = G.v.map(() => -1); H.spamAt = now() + 15000; H.padAt = G.pads.map(() => now() + 9000);
       for (const w of this.wolves.values()) if (w.bot) { this.spawn(w); w.ai = null; }
       this.onRound();
     }
@@ -266,7 +266,7 @@ export class Game {
     const G = this.G; if (G.ph !== 'play') return;
     if (G.spam && G.spam.i === i) {
       if (isHowl) return;
-      if (--G.spam.hp <= 0) { G.spam = null; G.sc[team] += 15; this.H.spamAt = now() + 22000; this.emit({ t: 'e', k: 'report', team, by }); }
+      if (--G.spam.hp <= 0) { G.spam = null; G.sc[team] += 15; this.H.spamAt = now() + 9000; this.emit({ t: 'e', k: 'report', team, by }); }
       return;
     }
     G.v[i] = clamp(G.v[i] + (team ? -pow : pow), -100, 100);
@@ -277,6 +277,7 @@ export class Game {
     const G = this.G, type = G.pads[pad]; if (!type || G.ph !== 'play') return;
     G.pads[pad] = 0; this.H.padAt[pad] = now() + 14000;
     const w = this.wolves.get(id);
+    if (w) G.sc[w.team] += PAGE_LEADS;
     if (PICKUPS[type].key === 'nap' && w) G.v = G.v.map((v) => (ownerOf(v) === w.team ? clamp(v + (w.team ? -12 : 12), -100, 100) : v));
     this.emit({ t: 'gv', id, pad, type });
   }
@@ -324,7 +325,8 @@ export class Game {
       }
       if (!G.spam && t >= H.spamAt) {
         const i = Math.floor(Math.random() * STORES.length);
-        G.spam = { i, hp: SPAM_HP }; this.emit({ t: 'e', k: 'spam', i });
+        const kind = Math.floor(Math.random() * ISSUES.length);
+        G.spam = { i, hp: SPAM_HP, kind }; this.emit({ t: 'e', k: 'spam', i, kind });
       }
       G.pads.forEach((p, i) => { if (!p && t >= H.padAt[i]) G.pads[i] = 1 + Math.floor(Math.random() * 4); });
     }
@@ -439,7 +441,8 @@ export class Game {
       const m = w.mesh; m.g.visible = !w.dead; m.g.position.set(w.x, 0, w.z); m.body.rotation.y = w.r;
       if (w.moving) w.walk += dt * 14;
       m.legs.forEach((l, i) => { l.rotation.x = w.moving ? Math.sin(w.walk + (i % 3 ? Math.PI : 0)) * 0.7 : 0; });
-      m.tail.rotation.y = Math.sin(t / 180 + w.x) * 0.4;
+      if (m.tail) m.tail.rotation.y = Math.sin(t / 180 + w.x) * 0.4;
+      if (m.model) { m.body.position.y = w.moving ? Math.abs(Math.sin(w.walk * 0.8)) * 0.35 : 0; m.body.rotation.x = w.moving ? Math.sin(w.walk * 1.6) * 0.06 : 0; }
       m.body.rotation.z = t < w.stun ? Math.sin(t / 40) * 0.25 : 0;
       m.shield.visible = w.shield;
     }
@@ -453,12 +456,12 @@ export class Game {
       const rank = pack.findIndex((p) => p.i === i);
       s.badges.forEach((b, n) => { b.visible = n === rank; });
       const spam = G.spam && G.spam.i === i;
-      s.spam.visible = !!spam; if (spam) { s.spam.rotation.y = t / 300; s.spam.scale.setScalar(0.6 + 0.4 * (G.spam.hp / SPAM_HP)); }
+      s.spam.visible = !!spam; if (spam) { s.issueLabels.forEach((l, n) => { l.visible = n === G.spam.kind; }); s.spam.rotation.y = t / 300; s.spam.scale.setScalar(0.6 + 0.4 * (G.spam.hp / SPAM_HP)); }
     });
     this.world.pads.forEach((p, i) => {
       const type = G.pads[i];
       if (type !== p.type) {
-        p.type = type; p.gem.visible = !!type;
+        p.type = type; p.gem.visible = !!type; for (const k in p.labels) p.labels[k].visible = +k === type;
         if (type) { p.gem.material.color.setHex(PICKUPS[type].color); p.ring.material.color.setHex(PICKUPS[type].color); } else p.ring.material.color.setHex(0x8892b0);
       }
       p.gem.rotation.y = t / 400; p.gem.position.y = 1.5 + Math.sin(t / 300 + i) * 0.2;

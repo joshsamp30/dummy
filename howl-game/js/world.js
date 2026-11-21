@@ -1,6 +1,20 @@
 // Scene construction: the block, storefronts, wolves, stars, effects.
 import * as THREE from '../vendor/three.module.min.js';
-import { TEAMS, STORES, PADS } from './config.js';
+import { GLTFLoader } from '../vendor/GLTFLoader.js';
+import { TEAMS, STORES, PADS, ISSUES, PICKUPS } from './config.js';
+
+// Wolf model generated with Higgsfield (image to 3D). Box wolves show until it loads, or if it fails.
+const WOLF_FACING = 0; // radians to turn the raw model so its nose points down +Z
+let wolfProto = null; const wolfWaiters = [];
+new GLTFLoader().load('assets/wolf.glb', (gltf) => {
+  const m = gltf.scene, box = new THREE.Box3().setFromObject(m), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+  const k = 3.7 / Math.max(size.x, size.y, size.z);
+  m.position.set(-c.x * k, -box.min.y * k, -c.z * k); m.scale.setScalar(k);
+  const holder = new THREE.Group(); holder.add(m); holder.rotation.y = WOLF_FACING;
+  wolfProto = new THREE.Group(); wolfProto.add(holder);
+  wolfWaiters.splice(0).forEach((fn) => fn());
+}, undefined, () => {});
+const TINT = [0xffffff, 0xd9deea, 0xb9c0d2, 0xf2dfc2];
 
 export const BOUNDS = { x: 48, z: 38 };
 export const STORE_HW = 6, STORE_HD = 4, STORE_H = 6;
@@ -42,7 +56,7 @@ function starShape(outer = 0.5, inner = 0.22) {
 }
 const STAR_GEO = new THREE.ExtrudeGeometry(starShape(), { depth: 0.16, bevelEnabled: false });
 STAR_GEO.center();
-const STAR_MATS = [new THREE.MeshBasicMaterial({ color: 0x8fb4ff }), new THREE.MeshBasicMaterial({ color: 0xff9db0 })];
+const STAR_MATS = [new THREE.MeshBasicMaterial({ color: 0x9fb0ff }), new THREE.MeshBasicMaterial({ color: 0xff9dc8 })];
 
 export function makeStar(team) {
   const m = new THREE.Mesh(STAR_GEO, STAR_MATS[team]);
@@ -133,20 +147,22 @@ function storefront(scene, def, i) {
   pin.position.set(0, STORE_H + 3.2, 0); pin.rotation.x = -0.5; g.add(pin);
 
   const badges = [1, 2, 3].map((n) => {
-    const s = labelSprite('MAP PACK #' + n, { color: '#0f172a', bg: '#edc550', size: 40, scale: 1.5 });
+    const s = labelSprite('MAP PACK #' + n, { color: '#101010', bg: '#fff078', size: 40, scale: 1.5 });
     s.position.set(0, STORE_H + 8.2, 0); s.visible = false; g.add(s); return s;
   });
 
   const spam = new THREE.Group();
   const spamPin = new THREE.Mesh(PIN_GEO, new THREE.MeshBasicMaterial({ color: 0xff2d2d }));
   spamPin.scale.setScalar(1.5); spamPin.rotation.x = -0.5; spam.add(spamPin);
-  const spamLabel = labelSprite('SPAM LISTING', { color: '#fff', bg: '#d81e1e', size: 40, scale: 1.6 });
-  spamLabel.position.y = 6.6; spam.add(spamLabel);
+  const issueLabels = ISSUES.map((it) => {
+    const l = labelSprite(it.label, { color: '#fff', bg: '#e02424', size: 40, scale: 1.6 });
+    l.position.y = 6.6; l.visible = false; spam.add(l); return l;
+  });
   spam.position.set(0, 1.5, face * (STORE_HD + 1.2)); spam.visible = false; g.add(spam);
 
   scene.add(g);
   colliders.push({ x: def.x, z: def.z, hw: STORE_HW, hd: STORE_HD, store: i });
-  return { def, face, bar, pin, badges, spam, body, front: { x: def.x, z: def.z + face * (STORE_HD + 7) } };
+  return { def, face, bar, pin, badges, spam, issueLabels, body, front: { x: def.x, z: def.z + face * (STORE_HD + 7) } };
 }
 
 export function buildWorld(scene) {
@@ -165,10 +181,10 @@ export function buildWorld(scene) {
   }
   for (let x = -44; x <= 44; x += 8) {
     if (Math.abs(x) < 9) continue;
-    const dash = new THREE.Mesh(new THREE.PlaneGeometry(3.5, 0.35), new THREE.MeshBasicMaterial({ color: 0xedc550 }));
+    const dash = new THREE.Mesh(new THREE.PlaneGeometry(3.5, 0.35), new THREE.MeshBasicMaterial({ color: 0xfff078 }));
     dash.rotation.x = -Math.PI / 2; dash.position.set(x, 0.03, 0); scene.add(dash);
   }
-  const plaza = new THREE.Mesh(new THREE.CircleGeometry(8, 40), lam(0xf0e6d1));
+  const plaza = new THREE.Mesh(new THREE.RingGeometry(6.6, 8, 48), lam(0xfaf9f5));
   plaza.rotation.x = -Math.PI / 2; plaza.position.y = 0.04; scene.add(plaza);
 
   // Centre statue: the Local Howl pin.
@@ -211,9 +227,11 @@ export function buildWorld(scene) {
   const pads = PADS.map((p) => {
     const ring = new THREE.Mesh(new THREE.RingGeometry(1.2, 1.5, 24), new THREE.MeshBasicMaterial({ color: 0x8892b0 }));
     ring.rotation.x = -Math.PI / 2; ring.position.set(p.x, 0.06, p.z); scene.add(ring);
-    const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.8, 0), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+    const gem = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.55, 0.12), new THREE.MeshBasicMaterial({ color: 0xffffff }));
     gem.position.set(p.x, 1.5, p.z); gem.visible = false; scene.add(gem);
-    return { ...p, ring, gem, label: null, type: 0 };
+    const labels = {};
+    for (const k of Object.keys(PICKUPS)) { const l = labelSprite('+ ' + PICKUPS[k].label, { color: '#101010', bg: '#faf9f5', size: 36, scale: 1.1 }); l.position.set(p.x, 3.6, p.z); l.visible = false; scene.add(l); labels[k] = l; }
+    return { ...p, ring, gem, labels, type: 0 };
   });
   return { stores, pads, statue };
 }
@@ -223,7 +241,8 @@ export function makeWolf(name, team, isMe, furIdx = 0) {
   const g = new THREE.Group();
   const fur = lam(FUR[furIdx % FUR.length]), dark = lam(0x2a3048), tc = lam(TEAMS[team].color, { emissive: TEAMS[team].color, emissiveIntensity: 0.35 });
   const body = new THREE.Group(); g.add(body);
-  const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); body.add(m); return m; };
+  const boxy = new THREE.Group(); body.add(boxy);
+  const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); boxy.add(m); return m; };
   add(new THREE.BoxGeometry(0.95, 0.85, 1.9), fur, 0, 1.05, 0);
   add(new THREE.BoxGeometry(0.85, 0.8, 0.8), fur, 0, 1.6, 1.1);
   add(new THREE.BoxGeometry(0.42, 0.36, 0.55), fur, 0, 1.45, 1.7);
@@ -234,13 +253,26 @@ export function makeWolf(name, team, isMe, furIdx = 0) {
   const legs = [[-0.32, 0.65], [0.32, 0.65], [-0.32, -0.65], [0.32, -0.65]].map(([x, z]) => add(new THREE.BoxGeometry(0.26, 0.7, 0.26), fur, x, 0.35, z));
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(1.1, 16), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3 }));
   shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.05; g.add(shadow);
-  const ring = new THREE.Mesh(new THREE.RingGeometry(1.25, 1.5, 28), new THREE.MeshBasicMaterial({ color: isMe ? 0xedc550 : TEAMS[team].color, transparent: true, opacity: isMe ? 1 : 0.7 }));
+  const ring = new THREE.Mesh(new THREE.RingGeometry(1.15, 1.5, 28), new THREE.MeshBasicMaterial({ color: isMe ? 0xfff078 : TEAMS[team].color, transparent: true, opacity: isMe ? 1 : 0.7 }));
   ring.rotation.x = -Math.PI / 2; ring.position.y = 0.07; g.add(ring);
   const shield = new THREE.Mesh(new THREE.SphereGeometry(1.9, 14, 10), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.22 }));
   shield.position.y = 1.1; shield.visible = false; g.add(shield);
-  const tag = labelSprite(isMe ? name + ' (you)' : name, { color: isMe ? '#edc550' : TEAMS[team].css, size: 36, scale: 0.95 });
+  const tag = labelSprite(isMe ? name + ' (you)' : name, { color: isMe ? '#fff078' : TEAMS[team].css, size: 36, scale: 0.95 });
   tag.position.y = 3.5; g.add(tag);
-  return { g, body, legs, tail, shield, tag };
+  const out = { g, body, legs, tail, shield, tag };
+  const useModel = () => {
+    const model = wolfProto.clone(true);
+    model.traverse((o) => {
+      if (!o.isMesh) return;
+      o.material = o.material.clone(); o.material.color.setHex(TINT[furIdx % TINT.length]);
+      o.material.metalness = 0; o.material.roughness = 1;
+      if (o.material.map) { o.material.emissive.setHex(0x55586a); o.material.emissiveMap = o.material.map; }
+    });
+    body.remove(boxy); body.add(model);
+    out.legs = []; out.tail = null; out.model = true; tag.position.y = 4.6; ring.scale.setScalar(1.25); shadow.scale.setScalar(1.3);
+  };
+  if (wolfProto) useModel(); else wolfWaiters.push(useModel);
+  return out;
 }
 
 export function makeHowlRing(team) {

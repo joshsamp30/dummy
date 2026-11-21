@@ -137,9 +137,9 @@ const ui = (() => {
     flash() { const f = $('flash'); f.classList.add('on'); setTimeout(() => f.classList.remove('on'), 80); },
     results(G, me, st) {
       const [a, b] = G.sc, win = a === b ? -1 : a > b ? 0 : 1;
-      $('resTitle').innerHTML = win < 0 ? 'Dead heat' : (me && me.team === win ? 'Your pack owns<span>the Map Pack</span>' : `${TEAMS[win].name} took<span>the Map Pack</span>`);
+      $('resTitle').innerHTML = win < 0 ? 'Dead heat.' : (me && me.team === win ? 'Your pack owns<span>the Map Pack.</span>' : `${TEAMS[win].name} took<span>the Map Pack.</span>`);
       $('resScore').textContent = `Night Pack ${a} leads. Dawn Pack ${b} leads.`;
-      $('resStats').innerHTML = [['Reviews', st.reviews], ['Rankings', st.captures], ['Spam reports', st.reports], ['Tags', st.tags]]
+      $('resStats').innerHTML = [['Reviews', st.reviews], ['Site fixes', st.fixes], ['New pages', st.pages], ['Rankings', st.captures]]
         .map(([l, v]) => `<li><b>${v}</b>${l}</li>`).join('');
       $('results').hidden = false;
     },

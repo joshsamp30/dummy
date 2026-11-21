@@ -10,8 +10,8 @@ export const CONFIG = {
 };
 
 export const TEAMS = [
-  { name: 'Night Pack', color: 0x3b7bff, css: '#3b7bff' },
-  { name: 'Dawn Pack', color: 0xff5c7a, css: '#ff5c7a' },
+  { name: 'Night Pack', color: 0x4d6bff, css: '#4d6bff' },
+  { name: 'Dawn Pack', color: 0xff5fa8, css: '#ff5fa8' },
 ];
 
 export const STORES = [
@@ -29,28 +29,38 @@ export const PADS = [
   { x: 0, z: -13 }, { x: 0, z: 13 }, { x: -22, z: 0 }, { x: 22, z: 0 },
 ];
 
-// Pickups are real local ranking levers.
+// Pickups are new website pages. Publishing one pays leads and gives a boost.
+export const PAGE_LEADS = 8;
 export const PICKUPS = {
-  1: { key: 'photos', label: 'Photos', color: 0xffc83d, buff: 'Double review power',
-       fact: 'Photos. Google says photos show people your goods and services and help your profile stand out.' },
-  2: { key: 'cats', label: 'Categories', color: 0x6cd3a8, buff: 'Rapid fire',
-       fact: 'Categories. Relevance is how well a profile matches the search. The right primary category drives it.' },
-  3: { key: 'reply', label: 'Review Reply', color: 0xffffff, buff: 'Full heal and shield',
-       fact: 'Review replies. Google says replying to reviews shows you value customers and their feedback.' },
-  4: { key: 'nap', label: 'Citations', color: 0xc9a2ff, buff: 'Boost every listing you hold',
-       fact: 'Citations. Prominence draws on what the web says about a business. Keep name, address and phone consistent.' },
+  1: { key: 'photos', label: 'Service Page', color: 0xfff078, buff: 'Double review power',
+       fact: 'Service page published. One page per service gives Google a clear page to match to that search.' },
+  2: { key: 'cats', label: 'FAQ Page', color: 0x6cd3a8, buff: 'Rapid fire',
+       fact: 'FAQ page published. Answering real customer questions lets you match more of what people search.' },
+  3: { key: 'reply', label: 'About Page', color: 0xffffff, buff: 'Full heal and shield',
+       fact: 'About page published. Google says to make clear who is behind a site. It builds trust.' },
+  4: { key: 'nap', label: 'Location Page', color: 0xc9a2ff, buff: 'Boost every listing you hold',
+       fact: 'Location page published. A unique page per area served helps you show up in that area.' },
 };
+
+// Technical website issues. They break a storefront until someone fixes them.
+export const ISSUES = [
+  { label: '404 ERROR', fact: 'A 404 page cannot rank. It also sends a ready customer to a dead end.' },
+  { label: 'SLOW PAGE', fact: 'Slow page. Google has used page speed as a ranking factor for mobile searches since 2018.' },
+  { label: 'NOT MOBILE FRIENDLY', fact: 'Google indexes and ranks from the mobile version of a site. Broken on phones means broken in search.' },
+  { label: 'NO HTTPS', fact: 'No HTTPS. Google has used HTTPS as a ranking signal since 2014. Browsers flag the rest as not secure.' },
+  { label: 'MISSING TITLE TAG', fact: 'Missing title tag. Google uses the title element to write the headline people see in results.' },
+  { label: 'BLOCKED FROM GOOGLE', fact: 'Blocked from crawling. If Google cannot crawl a page it cannot rank it.' },
+];
 
 export const FACTS = {
   capture: [
     'Reviews. Google says more reviews and positive ratings can improve local ranking.',
     'The Map Pack is the top 3 local results. Those three spots get most of the attention.',
-    'Local ranking runs on three things: relevance, distance and prominence.',
+    'Google says your position in web results is a factor in local ranking. Website work moves the map.',
     'Fresh reviews matter. A steady stream beats one big burst.',
   ],
   proximity: 'Distance. Closer to the searcher ranks better. Your reviews hit harder up close.',
-  spam: 'Spam listing. Fake profiles steal real leads. Report them to Google with the Business Redressal form.',
-  report: 'Reported. Removing a fake listing can move every real business up a spot.',
+  fixed: 'Fixed. Technical fixes let the pages and reviews you already earned do their job.',
   howl: 'Howl. Being loud everywhere builds prominence. Links, mentions and listings all count.',
 };
 
