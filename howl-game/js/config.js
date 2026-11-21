@@ -1,8 +1,8 @@
 // Public client config. The Supabase publishable key is safe to ship in the browser.
 // Leave SUPABASE_URL empty to run in local mode (solo with bots, or tabs on one device).
 export const CONFIG = {
-  SUPABASE_URL: '',
-  SUPABASE_KEY: '',
+  SUPABASE_URL: 'https://auadieirkythwgivldma.supabase.co',
+  SUPABASE_KEY: 'sb_publishable_22S6AH4dXHinfLff8aBcvw_EIZFwL-e',
   ROUND_SECONDS: 150,
   ROOM_CAP: 8,
   PACK_SIZE: 3, // each pack is filled to this size with bots
