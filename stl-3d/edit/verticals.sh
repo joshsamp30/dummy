@@ -21,8 +21,8 @@ cut3() {  # name  f1 s1 l1 x1  f2 s2 l2 x2  f3 s3 l3 x3
   ffprobe -v error -show_entries format=duration -of csv=p=0 $OUT/$name.mp4
 }
 # The Arch: dawn push-in, grounds with the pack, sunset pull-back
-cut3 vertical_arch      s1.mp4 5.0 5.0 0.50   s2.mp4 15.0 5.0 0.62   s5.mp4 15.5 5.6 0.50
+cut3 vertical_arch      s1.mp4 5.0 5.0 0.50   s2.mp4 15.0 5.0 0.62   s5.mp4 16.4 4.7 0.50
 # Downtown: Washington Avenue crane down, the pack at street level
-cut3 vertical_downtown  s3.mp4 0.5 4.5 0.50   s3.mp4 8.0 4.5 0.80    s3.mp4 12.3 6.6 0.86
+cut3 vertical_downtown  s3.mp4 0.5 4.5 0.50   s3.mp4 5.6 4.3 0.70    s3.mp4 9.3 6.6 0.86
 # The Loop: Walk of Fame, Blueberry Hill, the Pageant and the Moonrise moon
-cut3 vertical_loop      s4a.mp4 0.3 5.0 0.30  s4a.mp4 5.6 4.3 0.72   s4b.mp4 3.0 6.3 0.55
+cut3 vertical_loop      s4a.mp4 2.4 5.5 0.04  s4a.mp4 6.0 4.0 0.66   s4b.mp4 4.5 5.5 0.88
